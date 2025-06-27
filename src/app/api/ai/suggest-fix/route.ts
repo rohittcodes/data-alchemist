@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleAIService } from '@/lib/ai/google-ai-service'
 import kvStore from '@/lib/storage/kv-store'
-import { ValidationError } from '@/lib'
+import type { ValidationError, DataRow } from '@/lib'
 
 interface SuggestFixRequest {
   sessionId: string
   error: ValidationError
   context?: {
-    currentValue?: any
-    relatedData?: Record<string, any>[]
+    currentValue?: string | number | boolean | null
+    relatedData?: DataRow[]
     fieldOptions?: string[]
   }
 }
 
 interface FixSuggestion {
-  suggestedValue: any
+  suggestedValue: string | number | boolean | null
   confidence: 'high' | 'medium' | 'low'
   explanation: string
   isAutomatable: boolean
-  alternativeValues?: any[]
+  alternativeValues?: (string | number | boolean | null)[]
 }
 
 export async function POST(req: NextRequest) {

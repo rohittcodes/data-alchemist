@@ -7,14 +7,14 @@ export * from './skills'
 export * from './datatype'
 export * from './business'
 
-import { ValidationError, ValidationSummary, DataRow } from './types'
+import { ValidationError, ValidationSummary } from './types'
 import { validateDuplicateIDs } from './duplicate'
 import { validateAllRequiredFields } from './required'
 import { validateReferences } from './references'
 import { validateSkillCoverage, validateWorkerUtilization } from './skills'
 import { validateNumericFields, validateDateFields } from './datatype'
 import { validateBusinessLogic } from './business'
-import { ParsedData } from '../data/parsers'
+import type { ParsedData } from '../types'
 
 /**
  * Main validation function that runs all validation checks

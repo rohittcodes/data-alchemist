@@ -71,6 +71,8 @@ function validateClientTaskRelationships(
   
   clients.forEach((client, index) => {
     const clientId = client.clientid?.toString().toLowerCase().trim()
+    if (!clientId) return
+    
     const taskCount = taskCountByClient.get(clientId) || 0
     
     if (taskCount > 10) {
@@ -102,13 +104,13 @@ function validateWorkerTaskCapacity(
   
   // Calculate total task duration
   const totalTaskHours = tasks.reduce((sum, task) => {
-    const duration = parseFloat(task.duration) || 0
+    const duration = parseFloat(String(task.duration || '0')) || 0
     return sum + duration
   }, 0)
   
   // Calculate total worker capacity
   const totalWorkerHours = workers.reduce((sum, worker) => {
-    const availability = parseFloat(worker.availability) || 0
+    const availability = parseFloat(String(worker.availability || '0')) || 0
     // Assume 40-hour work week and availability is percentage
     const weeklyHours = (40 * availability) / 100
     return sum + weeklyHours

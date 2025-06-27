@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 
     // Handle single file downloads
     if (dataType && format !== 'zip') {
-      return handleSingleFileExport(sessionData, dataType, format)
+      return handleSingleFileExport(sessionData, dataType)
     }
 
     // Handle zip export (default)
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-async function handleSingleFileExport(sessionData: any, dataType: string, format: string) {
+async function handleSingleFileExport(sessionData: any, dataType: string) {
   try {
     let content: string
     let contentType: string

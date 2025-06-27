@@ -14,8 +14,6 @@ import {
   Clock, 
   Users, 
   Loader2,
-  Check,
-  X,
   AlertCircle
 } from 'lucide-react'
 

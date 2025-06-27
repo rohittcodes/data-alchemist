@@ -1,13 +1,9 @@
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
+import type { ParsedData } from '../types'
 
-export interface ParsedData {
-  headers: string[]
-  rows: Record<string, any>[]
-  rowCount: number
-  fileName: string
-  fileSize: number
-}
+// Re-export types for convenience
+export type { ParsedData, DataRow } from '../types'
 
 export async function parseCSV(file: File): Promise<ParsedData> {
   console.log('parseCSV: Starting to parse', file.name)
@@ -141,7 +137,7 @@ export async function parseFile(file: File): Promise<ParsedData> {
 
 export function validateDataStructure(data: ParsedData, expectedFields: string[]): string[] {
   const errors: string[] = []
-  const headers = data.headers.map(h => h.toLowerCase().trim())
+  const headers = data.headers.map((h: string) => h.toLowerCase().trim())
   
   for (const field of expectedFields) {
     if (!headers.includes(field.toLowerCase())) {

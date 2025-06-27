@@ -1,6 +1,18 @@
-import { ParsedData } from '../data/parsers'
+import type { ParsedData } from '../types'
 import fs from 'fs'
 import path from 'path'
+
+// Session data interface
+export interface SessionData {
+  sessionId: string
+  clients?: ParsedData
+  workers?: ParsedData
+  tasks?: ParsedData
+  rules?: unknown[]
+  created: number
+  lastModified: number
+  status: 'uploaded' | 'processing' | 'completed' | 'error'
+}
 
 // Hybrid file-based store for development that persists across hot reloads
 // In production, this would use Redis/Vercel KV
@@ -22,7 +34,7 @@ class FileKVStore {
     return path.join(this.getSessionPath(sessionId), 'session.json')
   }
 
-  async get(key: string): Promise<any> {
+  async get(key: string): Promise<SessionData | null> {
     if (key.startsWith('session:')) {
       const sessionId = key.replace('session:', '')
       const sessionDataPath = this.getSessionDataPath(sessionId)
@@ -39,7 +51,7 @@ class FileKVStore {
     return null
   }
 
-  async set(key: string, value: any): Promise<void> {
+  async set(key: string, value: SessionData): Promise<void> {
     if (key.startsWith('session:')) {
       const sessionId = key.replace('session:', '')
       const sessionPath = this.getSessionPath(sessionId)
@@ -109,16 +121,6 @@ class FileKVStore {
 
 // Singleton instance
 const kvStore = new FileKVStore()
-
-export interface SessionData {
-  sessionId: string
-  clients?: ParsedData
-  workers?: ParsedData
-  tasks?: ParsedData
-  created: number
-  lastModified: number
-  status: 'uploaded' | 'processing' | 'completed' | 'error'
-}
 
 export class SessionManager {
   static async createSession(sessionId: string): Promise<SessionData> {

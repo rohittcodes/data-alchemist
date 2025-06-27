@@ -7,11 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import type { SessionData } from '@/lib'
 import { 
   Download, 
   FileText, 
-  Database, 
-  Settings, 
+  Database,
   Package,
   Loader2,
   CheckCircle,
@@ -20,17 +20,6 @@ import {
   Braces,
   Archive
 } from 'lucide-react'
-
-interface SessionData {
-  sessionId: string
-  clients?: any
-  workers?: any
-  tasks?: any
-  rules?: any[]
-  created: number
-  lastModified: number
-  status: 'uploaded' | 'processing' | 'completed' | 'error'
-}
 
 interface ExportStats {
   totalFiles: number

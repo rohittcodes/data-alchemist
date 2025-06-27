@@ -15,7 +15,7 @@ export function validateNumericFields(
       case 'workers':
         // Validate rate field
         if (row.rate !== undefined && row.rate !== null) {
-          const rate = parseFloat(row.rate)
+          const rate = parseFloat(String(row.rate))
           if (isNaN(rate)) {
             errors.push({
               type: 'error',
@@ -57,7 +57,7 @@ export function validateNumericFields(
         
         // Validate availability field
         if (row.availability !== undefined && row.availability !== null) {
-          const availability = parseFloat(row.availability)
+          const availability = parseFloat(String(row.availability))
           if (isNaN(availability)) {
             errors.push({
               type: 'error',
@@ -89,7 +89,7 @@ export function validateNumericFields(
       case 'tasks':
         // Validate duration field
         if (row.duration !== undefined && row.duration !== null) {
-          const duration = parseFloat(row.duration)
+          const duration = parseFloat(String(row.duration))
           if (isNaN(duration)) {
             errors.push({
               type: 'error',

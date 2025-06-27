@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import kvStore from '@/lib/storage/kv-store'
-import { ValidationError } from '@/lib'
+import type { ValidationError, DataRow } from '@/lib'
 
 interface ApplyFixRequest {
   sessionId: string
   error: ValidationError
-  suggestedValue: any
+  suggestedValue: string | number | boolean | null
   applyToAll?: boolean
 }
 
@@ -32,14 +32,17 @@ export async function POST(req: NextRequest) {
     // Apply the fix
     const updatedData = { ...sessionData }
     const dataType = error.dataType
-    const targetData = updatedData.data[dataType]
-
-    if (!targetData || !Array.isArray(targetData)) {
+    
+    // Get the target parsed data
+    const parsedData = updatedData[dataType]
+    if (!parsedData || !parsedData.rows || !Array.isArray(parsedData.rows)) {
       return NextResponse.json(
         { error: `No data found for type: ${dataType}` },
         { status: 400 }
       )
     }
+
+    const targetData = parsedData.rows
 
     if (applyToAll && error.category === 'duplicate') {
       // For duplicate fixes, only apply to the specific row to avoid creating more duplicates
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
       // Apply to all rows with the same issue (for missing required fields, invalid data types, etc.)
       const originalValue = targetData[error.row]?.[error.column]
       
-      targetData.forEach((row: any, index: number) => {
+      targetData.forEach((row: DataRow) => {
         if (row[error.column] === originalValue || 
             (originalValue == null && (row[error.column] == null || row[error.column] === ''))) {
           row[error.column] = suggestedValue
@@ -63,17 +66,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Update the session
-    updatedData.data[dataType] = targetData
-    updatedData.lastModified = new Date().toISOString()
+    // Update the session data
+    if (updatedData[dataType]) {
+      updatedData[dataType]!.rows = targetData
+    }
+    updatedData.lastModified = Date.now()
     
     await kvStore.set(`session:${sessionId}`, updatedData)
 
     return NextResponse.json({ 
       success: true,
-      updatedData: updatedData.data,
+      updatedData: {
+        [dataType]: targetData
+      },
       affectedRows: applyToAll ? 
-        targetData.filter((row: any) => row[error.column] === suggestedValue).length : 
+        targetData.filter((row: DataRow) => row[error.column] === suggestedValue).length : 
         1
     })
   } catch (error) {

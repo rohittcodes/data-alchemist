@@ -102,7 +102,7 @@ async function handleSearch(query: string, sessionData: any) {
     // Fallback to contextual suggestions
     const availableFields = getAvailableFields(sessionData)
     const sampleData = getSampleData(sessionData)
-    const fallbackSuggestions = buildContextualSuggestions(availableFields, sampleData)
+    const fallbackSuggestions = buildContextualSuggestions(availableFields)
     
     return NextResponse.json({
       error: 'Failed to process search query',
@@ -124,7 +124,7 @@ async function handleSuggestions(sessionData: any) {
     )
     
     // Get contextual suggestions as fallback
-    const contextualSuggestions = buildContextualSuggestions(availableFields, sampleData)
+    const contextualSuggestions = buildContextualSuggestions(availableFields)
     
     // Combine and deduplicate
     const allSuggestions = [...new Set([...aiSuggestions, ...contextualSuggestions])]
@@ -141,7 +141,7 @@ async function handleSuggestions(sessionData: any) {
     // Fallback to contextual suggestions only
     const availableFields = getAvailableFields(sessionData)
     const sampleData = getSampleData(sessionData)
-    const fallbackSuggestions = buildContextualSuggestions(availableFields, sampleData)
+    const fallbackSuggestions = buildContextualSuggestions(availableFields)
     
     return NextResponse.json({
       suggestions: fallbackSuggestions,

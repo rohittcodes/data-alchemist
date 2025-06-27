@@ -10,18 +10,8 @@ import { DataTable } from '@/components/data'
 import { ValidationPanel } from '@/components/data'
 import { AISearch } from '@/components/data'
 import { Layout } from '@/components/layout'
-import { Database, Users, Briefcase, UserCheck, AlertTriangle, CheckCircle, Save, RefreshCw } from 'lucide-react'
-import { ParsedData, validateData, getErrorsForDataType, ValidationError as CoreValidationError, ValidationSummary } from '@/lib'
-
-interface SessionData {
-  sessionId: string
-  clients?: ParsedData
-  workers?: ParsedData
-  tasks?: ParsedData
-  created: number
-  lastModified: number
-  status: 'uploaded' | 'processing' | 'completed' | 'error'
-}
+import { Database, Users, Briefcase, UserCheck, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react'
+import { validateData, getErrorsForDataType, ValidationError as CoreValidationError, ValidationSummary, SessionData, DataRow, SearchResults } from '@/lib'
 
 interface ValidationError {
   row: number
@@ -56,9 +46,9 @@ function DataPageContent() {
   })
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [filteredData, setFilteredData] = useState<{
-    clients?: any[]
-    workers?: any[]
-    tasks?: any[]
+    clients?: DataRow[]
+    workers?: DataRow[]
+    tasks?: DataRow[]
   } | null>(null)
   const [searchActive, setSearchActive] = useState(false)
 
@@ -296,7 +286,7 @@ function DataPageContent() {
         {/* AI-Powered Search */}
         <AISearch 
           sessionId={sessionData.sessionId}
-          onResults={(results) => {
+          onResults={(results: SearchResults | null) => {
             if (results && results.filteredData) {
               setFilteredData(results.filteredData)
               setSearchActive(true)

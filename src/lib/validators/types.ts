@@ -6,7 +6,7 @@ export interface ValidationError {
   row: number
   column: string
   message: string
-  value?: any
+  value?: string | number | boolean | null
   suggestion?: string
 }
 
@@ -18,7 +18,7 @@ export interface ValidationSummary {
   allErrors: ValidationError[]
 }
 
-export type DataRow = Record<string, any>
+export type DataRow = Record<string, string | number | boolean | null>
 export type DataType = 'clients' | 'workers' | 'tasks'
 export type ValidatorFunction = (
   data: DataRow[],

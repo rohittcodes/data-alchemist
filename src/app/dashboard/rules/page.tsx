@@ -4,20 +4,10 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Layout } from '@/components/layout'
 import { RuleBuilder } from '@/components/data'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Settings, CheckCircle, AlertTriangle } from 'lucide-react'
-
-interface SessionData {
-  sessionId: string
-  clients?: any
-  workers?: any
-  tasks?: any
-  rules?: any[]
-  created: number
-  lastModified: number
-  status: 'uploaded' | 'processing' | 'completed' | 'error'
-}
+import type { SessionData } from '@/lib'
 
 function RulesPageContent() {
   const searchParams = useSearchParams()

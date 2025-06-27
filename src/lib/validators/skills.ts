@@ -28,13 +28,13 @@ export function validateSkillCoverage(
   // Collect all available skills from workers
   const availableSkills = new Set<string>()
   workers.forEach(worker => {
-    const skills = parseSkills(worker.skills)
+    const skills = parseSkills(String(worker.skills || ''))
     skills.forEach(skill => availableSkills.add(skill))
   })
   
   // Check if each task's required skills are covered
   tasks.forEach((task, index) => {
-    const requiredSkills = parseSkills(task.skills)
+    const requiredSkills = parseSkills(String(task.skills || ''))
     const uncoveredSkills: string[] = []
     
     requiredSkills.forEach(skill => {
@@ -77,13 +77,13 @@ export function validateWorkerUtilization(
   // Collect required skills from all tasks
   const requiredSkills = new Set<string>()
   tasks.forEach(task => {
-    const skills = parseSkills(task.skills)
+    const skills = parseSkills(String(task.skills || ''))
     skills.forEach(skill => requiredSkills.add(skill))
   })
   
   // Check if workers have skills that aren't needed
   workers.forEach((worker, index) => {
-    const workerSkills = parseSkills(worker.skills)
+    const workerSkills = parseSkills(String(worker.skills || ''))
     const unusedSkills = workerSkills.filter(skill => !requiredSkills.has(skill))
     
     if (unusedSkills.length > 0 && workerSkills.length > 0) {

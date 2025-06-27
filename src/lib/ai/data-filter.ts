@@ -1,5 +1,5 @@
 // Data filtering utilities for AI-powered search
-import { ParsedData } from '../data/parsers'
+import type { ParsedData, DataRow } from '../types'
 
 export interface FilterCondition {
   field: string
@@ -39,7 +39,7 @@ export function applyDataFilter(
   }
   
   // Apply filters
-  const filteredRows = targetData.rows.filter(row => 
+  const filteredRows = targetData.rows.filter((row: DataRow) => 
     filter.conditions.every(condition => matchesCondition(row, condition))
   )
   
@@ -172,7 +172,6 @@ export function getSampleData(sessionData: {
  */
 export function buildContextualSuggestions(
   availableFields: Record<string, string[]>,
-  sampleData: Record<string, any[]>
 ): string[] {
   const suggestions: string[] = []
   

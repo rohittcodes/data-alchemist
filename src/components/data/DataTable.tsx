@@ -1,17 +1,16 @@
 'use client'
 
-import React, { useMemo, useState, useCallback } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   ColumnDef,
   CellContext,
-  TableMeta,
 } from '@tanstack/react-table'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Check, X, Edit3, Save, AlertTriangle } from 'lucide-react'
+import { Check, X, Edit3, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ValidationError {
