@@ -1,0 +1,16 @@
+WorkerID,Name,Skills,Availability,Rate
+WRK001,Alice Johnson,React|Node.js|TypeScript|PostgreSQL,Monday-Friday 9AM-6PM,85
+WRK002,Bob Smith,Python|Django|AWS|Docker,Monday-Friday 10AM-7PM,90
+WRK003,Carol Davis,Vue.js|Express|MySQL|Redis,Monday-Friday 8AM-5PM,80
+WRK004,David Wilson,Angular|.NET|Azure|SQL Server,Monday-Friday 9AM-6PM,95
+WRK005,Emma Brown,React Native|Flutter|Firebase,Monday-Saturday 10AM-8PM,75
+WRK006,Frank Miller,PHP|Laravel|MongoDB|Nginx,Monday-Friday 9AM-5PM,70
+WRK007,Grace Lee,Java|Spring Boot|Kubernetes|Jenkins,Monday-Friday 8AM-4PM,100
+WRK008,Henry Taylor,Go|Microservices|GraphQL|Elasticsearch,Monday-Friday 11AM-8PM,105
+WRK009,Ivy Chen,React|TypeScript|Next.js|Vercel,Monday-Friday 9AM-6PM,88
+WRK010,Jack Anderson,Python|FastAPI|PostgreSQL|Celery,Monday-Friday 10AM-7PM,92
+WRK011,Kate Robinson,Vue.js|Nuxt.js|Tailwind|Strapi,Monday-Friday 8AM-5PM,78
+WRK012,Liam Garcia,Swift|iOS|Objective-C|Core Data,Monday-Friday 9AM-6PM,98
+WRK013,Maya Patel,Kotlin|Android|Room|Retrofit,Monday-Friday 10AM-7PM,96
+WRK014,Noah Williams,C#|Blazor|Entity Framework|SignalR,Monday-Friday 8AM-5PM,94
+WRK015,Olivia Martinez,JavaScript|Express|Socket.io|Redis,Monday-Saturday 9AM-7PM,82

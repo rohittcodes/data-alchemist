@@ -1,0 +1,15 @@
+{
+  "CaptureHotkey": {
+    "Modifiers": 1,
+    "Key": 83
+  },
+  "ToggleVisibilityHotkey": {
+    "Modifiers": 1,
+    "Key": 72
+  },
+  "TypeClipboardHotkey": {
+    "Modifiers": 1,
+    "Key": 88
+  },
+  "ApiKey": "AIzaSyAAjUbgEHbMrnDx7Fa99NMlDJ9MCOIECpo"
+}

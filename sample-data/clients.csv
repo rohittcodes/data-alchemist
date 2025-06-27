@@ -1,0 +1,11 @@
+ClientID,ClientName,Requirements,Priority
+CLI001,TechCorp Solutions,Full-stack development team for e-commerce platform,1
+CLI002,HealthFirst Medical,Healthcare app development with HIPAA compliance,2
+CLI003,GreenEnergy Co,Renewable energy monitoring dashboard,3
+CLI004,EduLearn Academy,Online learning platform with video streaming,1
+CLI005,FinanceSecure Bank,Banking application with advanced security,2
+CLI006,RetailMax Chain,Inventory management system for 50+ stores,3
+CLI007,AutoDrive Motors,Connected car software platform,1
+CLI008,FoodDelivery Express,Real-time delivery tracking application,2
+CLI009,RealEstate Pro,Property management and CRM system,3
+CLI010,SportsFan Network,Social media platform for sports enthusiasts,2
