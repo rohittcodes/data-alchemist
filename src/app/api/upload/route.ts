@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseFile, validateDataStructure, SessionManager } from '@/lib'
+import { parseFile, validateDataStructure } from '@/lib'
+import { SessionManager } from '@/lib/storage'
 
 // Simple session ID generation function that matches directory structure
 function generateSessionId(): string {

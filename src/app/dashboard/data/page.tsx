@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DataTable } from '@/components/data'
 import { ValidationPanel } from '@/components/data'
+import { AISearch } from '@/components/data'
 import { Layout } from '@/components/layout'
 import { Database, Users, Briefcase, UserCheck, AlertTriangle, CheckCircle, Save, RefreshCw } from 'lucide-react'
 import { ParsedData, validateData, getErrorsForDataType, ValidationError as CoreValidationError, ValidationSummary } from '@/lib'
@@ -28,7 +29,8 @@ interface ValidationError {
   message: string
 }
 
-export default function DataPage() {
+// Component that uses useSearchParams (needs to be wrapped in Suspense)
+function DataPageContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session')
   
@@ -53,6 +55,12 @@ export default function DataPage() {
     tasks: []
   })
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [filteredData, setFilteredData] = useState<{
+    clients?: any[]
+    workers?: any[]
+    tasks?: any[]
+  } | null>(null)
+  const [searchActive, setSearchActive] = useState(false)
 
   // Fetch session data
   useEffect(() => {
@@ -279,9 +287,60 @@ export default function DataPage() {
         {/* Validation Summary Panel */}
         <ValidationPanel 
           validation={validationSummary}
+          sessionId={sessionData.sessionId}
           onJumpToError={handleJumpToError}
+          onDataUpdated={fetchSessionData}
           className="mb-8"
         />
+
+        {/* AI-Powered Search */}
+        <AISearch 
+          sessionId={sessionData.sessionId}
+          onResults={(results) => {
+            if (results && results.filteredData) {
+              setFilteredData(results.filteredData)
+              setSearchActive(true)
+              
+              // If results specify a specific data type, switch to that tab
+              if (results.filter && results.filter.dataType) {
+                setActiveTab(results.filter.dataType)
+              }
+            } else {
+              // Clear search results
+              setFilteredData(null)
+              setSearchActive(false)
+            }
+          }}
+          className="mb-8"
+        />
+
+        {/* Search Results Info */}
+        {searchActive && filteredData && (
+          <Card className="mb-6 border-blue-200 bg-blue-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    Search Active
+                  </Badge>
+                  <span className="text-sm">
+                    Showing filtered results
+                  </span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    setFilteredData(null)
+                    setSearchActive(false)
+                  }}
+                >
+                  Clear Filter
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Three-Tab Layout */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -291,7 +350,10 @@ export default function DataPage() {
               Clients
               {sessionData.clients && (
                 <Badge variant="secondary" className="ml-1">
-                  {sessionData.clients.rowCount}
+                  {searchActive && filteredData?.clients 
+                    ? `${filteredData.clients.length} / ${sessionData.clients.rowCount}`
+                    : sessionData.clients.rowCount
+                  }
                 </Badge>
               )}
               {validationErrors.clients.length > 0 && (
@@ -306,7 +368,10 @@ export default function DataPage() {
               Workers
               {sessionData.workers && (
                 <Badge variant="secondary" className="ml-1">
-                  {sessionData.workers.rowCount}
+                  {searchActive && filteredData?.workers
+                    ? `${filteredData.workers.length} / ${sessionData.workers.rowCount}`
+                    : sessionData.workers.rowCount
+                  }
                 </Badge>
               )}
               {validationErrors.workers.length > 0 && (
@@ -321,7 +386,10 @@ export default function DataPage() {
               Tasks
               {sessionData.tasks && (
                 <Badge variant="secondary" className="ml-1">
-                  {sessionData.tasks.rowCount}
+                  {searchActive && filteredData?.tasks
+                    ? `${filteredData.tasks.length} / ${sessionData.tasks.rowCount}`
+                    : sessionData.tasks.rowCount
+                  }
                 </Badge>
               )}
               {validationErrors.tasks.length > 0 && (
@@ -339,7 +407,9 @@ export default function DataPage() {
                 <CardTitle>Clients Data</CardTitle>
                 <CardDescription>
                   {sessionData.clients 
-                    ? `${sessionData.clients.rowCount} clients loaded`
+                    ? searchActive && filteredData?.clients
+                      ? `Showing ${filteredData.clients.length} of ${sessionData.clients.rowCount} clients`
+                      : `${sessionData.clients.rowCount} clients loaded`
                     : 'No clients data available'
                   }
                 </CardDescription>
@@ -348,7 +418,7 @@ export default function DataPage() {
                 {sessionData.clients ? (
                   <div data-testid="clients-table">
                     <DataTable
-                      data={sessionData.clients.rows}
+                      data={searchActive && filteredData?.clients ? filteredData.clients : sessionData.clients.rows}
                       onCellEdit={(rowIndex, columnId, value) => 
                         handleCellEdit('clients', rowIndex, columnId, value)
                       }
@@ -371,7 +441,9 @@ export default function DataPage() {
                 <CardTitle>Workers Data</CardTitle>
                 <CardDescription>
                   {sessionData.workers 
-                    ? `${sessionData.workers.rowCount} workers loaded`
+                    ? searchActive && filteredData?.workers
+                      ? `Showing ${filteredData.workers.length} of ${sessionData.workers.rowCount} workers`
+                      : `${sessionData.workers.rowCount} workers loaded`
                     : 'No workers data available'
                   }
                 </CardDescription>
@@ -380,7 +452,7 @@ export default function DataPage() {
                 {sessionData.workers ? (
                   <div data-testid="workers-table">
                     <DataTable
-                      data={sessionData.workers.rows}
+                      data={searchActive && filteredData?.workers ? filteredData.workers : sessionData.workers.rows}
                       onCellEdit={(rowIndex, columnId, value) => 
                         handleCellEdit('workers', rowIndex, columnId, value)
                       }
@@ -403,7 +475,9 @@ export default function DataPage() {
                 <CardTitle>Tasks Data</CardTitle>
                 <CardDescription>
                   {sessionData.tasks 
-                    ? `${sessionData.tasks.rowCount} tasks loaded`
+                    ? searchActive && filteredData?.tasks
+                      ? `Showing ${filteredData.tasks.length} of ${sessionData.tasks.rowCount} tasks`
+                      : `${sessionData.tasks.rowCount} tasks loaded`
                     : 'No tasks data available'
                   }
                 </CardDescription>
@@ -412,7 +486,7 @@ export default function DataPage() {
                 {sessionData.tasks ? (
                   <div data-testid="tasks-table">
                     <DataTable
-                      data={sessionData.tasks.rows}
+                      data={searchActive && filteredData?.tasks ? filteredData.tasks : sessionData.tasks.rows}
                       onCellEdit={(rowIndex, columnId, value) => 
                         handleCellEdit('tasks', rowIndex, columnId, value)
                       }
@@ -430,5 +504,23 @@ export default function DataPage() {
         </Tabs>
       </div>
     </Layout>
+  )
+}
+
+// Main page component with Suspense boundary
+export default function DataPage() {
+  return (
+    <Suspense fallback={
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex items-center space-x-2">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            <span>Loading dashboard...</span>
+          </div>
+        </div>
+      </Layout>
+    }>
+      <DataPageContent />
+    </Suspense>
   )
 }

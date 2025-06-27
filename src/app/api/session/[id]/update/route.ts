@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SessionManager } from '@/lib'
+import { SessionManager } from '@/lib/storage'
 import { ParsedData } from '@/lib'
 
 export async function POST(

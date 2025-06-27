@@ -48,6 +48,9 @@ lib/
 ├── storage/
 │   ├── index.ts          # Storage exports
 │   └── kv-store.ts       # Session management
+├── ai/
+│   ├── google-ai-service.ts # Google AI (Gemini) integration
+│   └── data-filter.ts    # AI-powered data filtering
 └── validators/
     ├── index.ts          # Validation orchestrator
     ├── types.ts          # Validation-specific types
@@ -210,12 +213,16 @@ const customPlugin: ValidationPlugin = {
 Modular structure makes AI enhancement straightforward:
 
 ```typescript
-// AI-powered validation suggestion
-export async function validateWithAI(
-  data: DataRow[], 
-  existingErrors: ValidationError[]
-): Promise<ValidationError[]> {
-  // Send to AI service for advanced validation
+// Google AI-powered validation and search
+import { GoogleAIService } from '@/lib/ai/google-ai-service'
+
+export async function searchWithAI(
+  query: string,
+  sessionData: any
+): Promise<FilteredResults> {
+  const aiService = new GoogleAIService()
+  const filter = await aiService.generateDataFilter(query, fields, sampleData)
+  return applyDataFilter(sessionData, filter)
 }
 ```
 

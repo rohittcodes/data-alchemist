@@ -340,19 +340,29 @@ export default function DashboardPage() {
                 <CardContent>
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      Generate intelligent rules for:
+                      Create intelligent rules for your project workflow:
                     </p>
                     <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                      <li>Co-run requirements and dependencies</li>
-                      <li>Load limits and capacity constraints</li>
+                      <li>Co-run requirements and task dependencies</li>
+                      <li>Worker load limits and capacity constraints</li>
                       <li>Phase windows and timing rules</li>
-                      <li>Worker availability and skills matching</li>
-                      <li>Client priority and scheduling preferences</li>
+                      <li>Natural language rule creation with AI</li>
+                      <li>Form-based rule builder for structured rules</li>
                     </ul>
-                    <Button>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Open Rule Builder
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => router.push(`/dashboard/rules?session=${sessionData?.sessionId}`)}
+                        disabled={!sessionData?.sessionId}
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        Open Rule Builder
+                      </Button>
+                      {sessionData && (
+                        <Badge variant="outline" className="self-center">
+                          {(sessionData as any).rules?.length || 0} rules configured
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
