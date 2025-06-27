@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SessionManager } from '@/lib/kv-store'
+import { SessionManager } from '@/lib'
 
 export async function GET(
   request: NextRequest,
@@ -8,17 +8,22 @@ export async function GET(
   try {
     const resolvedParams = await params
     const sessionId = resolvedParams.id
+    console.log('Session API GET called for sessionId:', sessionId)
 
     if (!sessionId) {
+      console.log('No session ID provided')
       return NextResponse.json(
         { error: 'Session ID is required' },
         { status: 400 }
       )
     }
 
+    console.log('Attempting to get session data for:', sessionId)
     const sessionData = await SessionManager.getSession(sessionId)
+    console.log('Session data retrieved:', sessionData ? 'found' : 'not found')
     
     if (!sessionData) {
+      console.log('Session not found for ID:', sessionId)
       return NextResponse.json(
         { error: 'Session not found' },
         { status: 404 }

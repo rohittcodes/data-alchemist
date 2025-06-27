@@ -1,12 +1,14 @@
 {
   "name": "data-alchemist",
-  "version": "0.1.0",
+  "version": "1.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node tests/test-comprehensive.js",
+    "clean": "rmdir /s /q .next && rmdir /s /q uploads"
   },
   "dependencies": {
     "@google/genai": "^1.7.0",

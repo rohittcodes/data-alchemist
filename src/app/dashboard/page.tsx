@@ -60,6 +60,9 @@ export default function DashboardPage() {
         const response = await fetch(`/api/session/${sessionId}`)
         
         if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error(`Session ${sessionId} not found. Please upload files again.`)
+          }
           throw new Error('Failed to fetch session data')
         }
         

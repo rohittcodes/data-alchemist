@@ -6,10 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { DataTable } from '@/components/global/DataTable'
-import { Layout } from '@/components/global/Layout'
-import { Database, Users, Briefcase, UserCheck, AlertTriangle, CheckCircle, Save } from 'lucide-react'
-import { ParsedData } from '@/lib/parsers'
+import { DataTable } from '@/components/data'
+import { ValidationPanel } from '@/components/data'
+import { Layout } from '@/components/layout'
+import { Database, Users, Briefcase, UserCheck, AlertTriangle, CheckCircle, Save, RefreshCw } from 'lucide-react'
+import { ParsedData, validateData, getErrorsForDataType, ValidationError as CoreValidationError, ValidationSummary } from '@/lib'
 
 interface SessionData {
   sessionId: string
@@ -35,6 +36,13 @@ export default function DataPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('clients')
+  const [validationSummary, setValidationSummary] = useState<ValidationSummary>({
+    totalErrors: 0,
+    totalWarnings: 0,
+    errorsByCategory: {},
+    criticalIssues: [],
+    allErrors: []
+  })
   const [validationErrors, setValidationErrors] = useState<{
     clients: ValidationError[]
     workers: ValidationError[]
@@ -63,6 +71,9 @@ export default function DataPage() {
       const response = await fetch(`/api/session/${sessionId}?includeData=true`)
       
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Session ${sessionId} not found. Please upload files again.`)
+        }
         throw new Error('Failed to fetch session data')
       }
       
@@ -78,92 +89,41 @@ export default function DataPage() {
     }
   }
 
-  // Simple validation logic
+  // Comprehensive validation using the new engine
   const runValidation = (data: SessionData) => {
-    const errors: typeof validationErrors = {
-      clients: [],
-      workers: [],
-      tasks: []
-    }
-
-    // Validate clients
-    if (data.clients?.rows) {
-      data.clients.rows.forEach((row, index) => {
-        if (!row.ClientID || row.ClientID.trim() === '') {
-          errors.clients.push({
-            row: index,
-            column: 'ClientID',
-            message: 'Client ID is required'
-          })
-        }
-        if (!row.ClientName || row.ClientName.trim() === '') {
-          errors.clients.push({
-            row: index,
-            column: 'ClientName',
-            message: 'Client name is required'
-          })
-        }
-      })
-    }
-
-    // Validate workers
-    if (data.workers?.rows) {
-      data.workers.rows.forEach((row, index) => {
-        if (!row.WorkerID || row.WorkerID.trim() === '') {
-          errors.workers.push({
-            row: index,
-            column: 'WorkerID',
-            message: 'Worker ID is required'
-          })
-        }
-        if (!row.Name || row.Name.trim() === '') {
-          errors.workers.push({
-            row: index,
-            column: 'Name',
-            message: 'Worker name is required'
-          })
-        }
-        if (row.Rate && isNaN(Number(row.Rate))) {
-          errors.workers.push({
-            row: index,
-            column: 'Rate',
-            message: 'Rate must be a number'
-          })
-        }
-      })
-    }
-
-    // Validate tasks
-    if (data.tasks?.rows) {
-      data.tasks.rows.forEach((row, index) => {
-        if (!row.TaskID || row.TaskID.trim() === '') {
-          errors.tasks.push({
-            row: index,
-            column: 'TaskID',
-            message: 'Task ID is required'
-          })
-        }
-        if (!row.ClientID || row.ClientID.trim() === '') {
-          errors.tasks.push({
-            row: index,
-            column: 'ClientID',
-            message: 'Client ID is required'
-          })
-        }
-        if (row.Duration && isNaN(Number(row.Duration))) {
-          errors.tasks.push({
-            row: index,
-            column: 'Duration',
-            message: 'Duration must be a number'
-          })
-        }
-      })
-    }
-
-    setValidationErrors(errors)
+    const validationResult = validateData(data.clients, data.workers, data.tasks)
+    setValidationSummary(validationResult)
+    
+    // Convert to DataTable format
+    setValidationErrors({
+      clients: getErrorsForDataType(validationResult.allErrors, 'clients'),
+      workers: getErrorsForDataType(validationResult.allErrors, 'workers'),
+      tasks: getErrorsForDataType(validationResult.allErrors, 'tasks')
+    })
   }
 
-  // Handle cell edits with auto-save
+  // Handle jumping to specific validation errors
+  const handleJumpToError = useCallback((error: CoreValidationError) => {
+    // Switch to the appropriate tab
+    setActiveTab(error.dataType)
+    
+    // Scroll to the error (in a real implementation, you might want to highlight the specific cell)
+    setTimeout(() => {
+      const tableElement = document.querySelector(`[data-testid="${error.dataType}-table"]`)
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
+  }, [])
+
+  // Manual re-validation trigger
+  const handleRevalidate = useCallback(() => {
+    if (sessionData) {
+      runValidation(sessionData)
+    }
+  }, [sessionData])
+
+  // Handle cell edits with auto-save and real-time validation
   const handleCellEdit = useCallback(async (
     dataType: 'clients' | 'workers' | 'tasks',
     rowIndex: number,
@@ -202,7 +162,7 @@ export default function DataPage() {
 
       setSaveStatus('saved')
       
-      // Re-run validation after edit
+      // Re-run validation after edit with updated data
       runValidation(updatedData)
 
       // Reset save status after a delay
@@ -248,7 +208,9 @@ export default function DataPage() {
     )
   }
 
-  const totalErrors = validationErrors.clients.length + validationErrors.workers.length + validationErrors.tasks.length
+  const totalErrors = validationSummary.totalErrors
+  const totalWarnings = validationSummary.totalWarnings
+  const totalIssues = totalErrors + totalWarnings
 
   return (
     <Layout>
@@ -266,6 +228,17 @@ export default function DataPage() {
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Re-validation Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRevalidate}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Re-validate
+            </Button>
+
             {/* Save Status */}
             <div className="flex items-center gap-2">
               {saveStatus === 'saving' && (
@@ -289,19 +262,26 @@ export default function DataPage() {
             </div>
 
             {/* Validation Status */}
-            {totalErrors > 0 ? (
-              <Badge variant="destructive">
-                <AlertTriangle className="h-3 w-3 mr-1" />
-                {totalErrors} error{totalErrors > 1 ? 's' : ''}
+            {totalIssues > 0 ? (
+              <Badge variant="destructive" className="flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                {totalErrors > 0 ? `${totalErrors} error${totalErrors > 1 ? 's' : ''}` : `${totalWarnings} warning${totalWarnings > 1 ? 's' : ''}`}
               </Badge>
             ) : (
-              <Badge variant="default" className="bg-green-100 text-green-800">
-                <CheckCircle className="h-3 w-3 mr-1" />
+              <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
+                <CheckCircle className="h-3 w-3" />
                 Valid
               </Badge>
             )}
           </div>
         </div>
+
+        {/* Validation Summary Panel */}
+        <ValidationPanel 
+          validation={validationSummary}
+          onJumpToError={handleJumpToError}
+          className="mb-8"
+        />
 
         {/* Three-Tab Layout */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -366,13 +346,15 @@ export default function DataPage() {
               </CardHeader>
               <CardContent>
                 {sessionData.clients ? (
-                  <DataTable
-                    data={sessionData.clients.rows}
-                    onCellEdit={(rowIndex, columnId, value) => 
-                      handleCellEdit('clients', rowIndex, columnId, value)
-                    }
-                    validationErrors={validationErrors.clients}
-                  />
+                  <div data-testid="clients-table">
+                    <DataTable
+                      data={sessionData.clients.rows}
+                      onCellEdit={(rowIndex, columnId, value) => 
+                        handleCellEdit('clients', rowIndex, columnId, value)
+                      }
+                      validationErrors={validationErrors.clients}
+                    />
+                  </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     No clients data uploaded
@@ -396,13 +378,15 @@ export default function DataPage() {
               </CardHeader>
               <CardContent>
                 {sessionData.workers ? (
-                  <DataTable
-                    data={sessionData.workers.rows}
-                    onCellEdit={(rowIndex, columnId, value) => 
-                      handleCellEdit('workers', rowIndex, columnId, value)
-                    }
-                    validationErrors={validationErrors.workers}
-                  />
+                  <div data-testid="workers-table">
+                    <DataTable
+                      data={sessionData.workers.rows}
+                      onCellEdit={(rowIndex, columnId, value) => 
+                        handleCellEdit('workers', rowIndex, columnId, value)
+                      }
+                      validationErrors={validationErrors.workers}
+                    />
+                  </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     No workers data uploaded
@@ -426,13 +410,15 @@ export default function DataPage() {
               </CardHeader>
               <CardContent>
                 {sessionData.tasks ? (
-                  <DataTable
-                    data={sessionData.tasks.rows}
-                    onCellEdit={(rowIndex, columnId, value) => 
-                      handleCellEdit('tasks', rowIndex, columnId, value)
-                    }
-                    validationErrors={validationErrors.tasks}
-                  />
+                  <div data-testid="tasks-table">
+                    <DataTable
+                      data={sessionData.tasks.rows}
+                      onCellEdit={(rowIndex, columnId, value) => 
+                        handleCellEdit('tasks', rowIndex, columnId, value)
+                      }
+                      validationErrors={validationErrors.tasks}
+                    />
+                  </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     No tasks data uploaded

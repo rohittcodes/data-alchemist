@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SessionManager } from '@/lib/kv-store'
-import { ParsedData } from '@/lib/parsers'
+import { SessionManager } from '@/lib'
+import { ParsedData } from '@/lib'
 
 export async function POST(
   request: NextRequest,

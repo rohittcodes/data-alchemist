@@ -1,0 +1,79 @@
+{
+  "sessionId": "1751040999709_trpy77c5",
+  "created": 1751040999709,
+  "lastModified": 1751040999718,
+  "status": "uploaded",
+  "clients": {
+    "headers": [
+      "ClientID",
+      "ClientName",
+      "Requirements",
+      "Priority"
+    ],
+    "rows": [
+      {
+        "ClientID": "CLI001",
+        "ClientName": "TechCorp Solutions",
+        "Requirements": "Full-stack development team for e-commerce platform",
+        "Priority": "1"
+      },
+      {
+        "ClientID": "CLI002",
+        "ClientName": "HealthFirst Medical",
+        "Requirements": "Healthcare app development with HIPAA compliance",
+        "Priority": "2"
+      },
+      {
+        "ClientID": "CLI003",
+        "ClientName": "GreenEnergy Co",
+        "Requirements": "Renewable energy monitoring dashboard",
+        "Priority": "3"
+      },
+      {
+        "ClientID": "CLI004",
+        "ClientName": "EduLearn Academy",
+        "Requirements": "Online learning platform with video streaming",
+        "Priority": "1"
+      },
+      {
+        "ClientID": "CLI005",
+        "ClientName": "FinanceSecure Bank",
+        "Requirements": "Banking application with advanced security",
+        "Priority": "2"
+      },
+      {
+        "ClientID": "CLI006",
+        "ClientName": "RetailMax Chain",
+        "Requirements": "Inventory management system for 50+ stores",
+        "Priority": "3"
+      },
+      {
+        "ClientID": "CLI007",
+        "ClientName": "AutoDrive Motors",
+        "Requirements": "Connected car software platform",
+        "Priority": "1"
+      },
+      {
+        "ClientID": "CLI008",
+        "ClientName": "FoodDelivery Express",
+        "Requirements": "Real-time delivery tracking application",
+        "Priority": "2"
+      },
+      {
+        "ClientID": "CLI009",
+        "ClientName": "RealEstate Pro",
+        "Requirements": "Property management and CRM system",
+        "Priority": "3"
+      },
+      {
+        "ClientID": "CLI010",
+        "ClientName": "SportsFan Network",
+        "Requirements": "Social media platform for sports enthusiasts",
+        "Priority": "2"
+      }
+    ],
+    "rowCount": 10,
+    "fileName": "clients.csv",
+    "fileSize": 743
+  }
+}

@@ -30,6 +30,7 @@ interface DataTableProps {
 
 // Extend TableMeta to include our custom properties
 declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface TableMeta<TData> {
     onCellEdit?: (rowIndex: number, columnId: string, value: string) => Promise<void>
     validationErrors?: ValidationError[]

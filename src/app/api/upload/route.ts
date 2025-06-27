@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseFile, validateDataStructure } from '@/lib/parsers'
-import { SessionManager } from '@/lib/kv-store'
+import { parseFile, validateDataStructure, SessionManager } from '@/lib'
 
-// Simple UUID generation function
+// Simple session ID generation function that matches directory structure
 function generateSessionId(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+  const timestamp = Date.now()
+  const random = Math.random().toString(36).substring(2, 10)
+  return `${timestamp}_${random}`
 }
 
 // Expected fields for validation (case insensitive)
