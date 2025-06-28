@@ -29,6 +29,24 @@ export function canAutoFix(error: ValidationError): boolean {
   
   // Simple data type and formatting issues can be auto-fixed (including warnings)
   if (error.category === 'datatype') {
+    // Duration warnings (like "Very long task duration") require manual review - CHECK FIRST
+    if (error.message?.includes('duration') && (error.message?.includes('long') || error.message?.includes('Very long'))) {
+      console.log('canAutoFix: long duration warning - NOT FIXABLE (business decision)')
+      return false
+    }
+    
+    // Task duration warnings with "hours" also require manual review
+    if (error.message?.includes('task duration') && error.message?.includes('hours')) {
+      console.log('canAutoFix: task duration warning - NOT FIXABLE (business decision)')
+      return false
+    }
+    
+    // Availability format errors require manual review (cannot auto-convert schedules to percentages)
+    if (error.message?.includes('availability format') || (error.column === 'availability' && error.message?.includes('Invalid'))) {
+      console.log('canAutoFix: availability format error - NOT FIXABLE (requires manual conversion)')
+      return false
+    }
+    
     // Special handling for past deadline warnings
     if (error.message?.includes('deadline is in the past')) {
       console.log('canAutoFix: past deadline warning - FIXABLE')
@@ -229,6 +247,16 @@ function fixDataTypeError(error: ValidationError, rowData: DataRow): AutoFixResu
     message: error.message,
     column: error.column
   })
+  
+  // Duration warnings require business logic decisions - cannot auto-fix
+  if (error.message.includes('duration') && error.message.includes('long')) {
+    console.log('Duration warning detected - requires manual review')
+    return {
+      success: false,
+      reason: 'Duration optimization requires business decision - manual review needed',
+      requiresManualReview: true
+    }
+  }
   
   // Fix numeric fields
   if (error.message.includes('number') || error.message.includes('numeric')) {

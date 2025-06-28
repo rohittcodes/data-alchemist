@@ -40,4 +40,20 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
+# Development files
+uploads/*
+!uploads/.gitkeep
+*.log
+error.txt
+debug-*.js
+demo-*.js
+test-*.js
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
