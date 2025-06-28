@@ -1,5 +1,8 @@
 // Test file for Google AI integration
-const { GoogleGenAI } = require('@google/genai')
+const { GoogleGenerativeAI } = require('@google/generative-ai')
+
+// Load environment variables
+require('dotenv').config({ path: '.env.local' })
 
 // Test the package is properly installed and can be imported
 async function testGoogleAIPackage() {
@@ -9,21 +12,32 @@ async function testGoogleAIPackage() {
     // Test basic import
     console.log('✅ Google AI package imported successfully')
     
-    // Test client initialization (will fail without API key, but should not throw import errors)
-    const client = new GoogleGenAI({ apiKey: 'test-key' })
-    console.log('✅ Google AI client can be initialized')
-    
-    // Check if the models property exists
-    if (client.models) {
-      console.log('✅ Models interface is available')
-    } else {
-      console.log('❌ Models interface not found')
+    const apiKey = process.env.GOOGLE_API_KEY
+    if (!apiKey) {
+      console.warn('⚠️ No API key found, testing with mock key')
+      const client = new GoogleGenerativeAI('test-key')
+      console.log('✅ Google AI client can be initialized')
+      console.log('🎉 Package structure test completed!')
+      return
     }
     
-    console.log('🎉 Google AI package test completed successfully!')
+    console.log('✅ API key found:', apiKey.substring(0, 10) + '...')
+    
+    // Test client initialization with real API key
+    const client = new GoogleGenerativeAI(apiKey)
+    console.log('✅ Google AI client initialized with API key')
+    
+    // Test getting a model
+    const model = client.getGenerativeModel({ model: 'gemini-2.0-flash-001' })
+    console.log('✅ Model instance created')
+    
+    console.log('🎉 Google AI integration test completed successfully!')
     
   } catch (error) {
-    console.error('❌ Google AI package test failed:', error.message)
+    console.error('❌ Google AI integration test failed:', error.message)
+    if (error.message.includes('API_KEY')) {
+      console.log('💡 Make sure your API key is valid and the Gemini API is enabled')
+    }
     process.exit(1)
   }
 }

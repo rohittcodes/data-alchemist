@@ -91,6 +91,8 @@ export const AISearch: React.FC<AISearchProps> = ({
       const data = await response.json()
 
       if (response.ok) {
+        console.log('AI Search Results:', data)
+        console.log('Filtered Data:', data.filteredData)
         setLastResult(data)
         onResults?.(data)
         

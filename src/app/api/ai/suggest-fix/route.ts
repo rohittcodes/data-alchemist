@@ -62,7 +62,12 @@ async function generateFixSuggestion(
   sessionData: any,
   context?: SuggestFixRequest['context']
 ): Promise<FixSuggestion> {
-  const data = sessionData.data
+  // Fix: Access data directly from sessionData structure
+  const data = {
+    clients: sessionData.clients?.rows || [],
+    workers: sessionData.workers?.rows || [],
+    tasks: sessionData.tasks?.rows || []
+  }
   const errorRow = data[error.dataType]?.[error.row]
   
   // Build context for AI

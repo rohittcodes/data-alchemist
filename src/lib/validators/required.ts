@@ -45,11 +45,11 @@ export function validateAllRequiredFields(
 ): ValidationError[] {
   const errors: ValidationError[] = []
   
-  // Required fields for each data type
+  // Required fields for each data type (using normalized field names)
   const requiredFields = {
-    clients: ['clientid', 'clientname', 'requirements', 'priority'],
-    workers: ['workerid', 'name', 'skills', 'availability', 'rate'],
-    tasks: ['taskid', 'clientid', 'duration', 'skills', 'deadline']
+    clients: ['clientId', 'clientName', 'requirements', 'priority'],
+    workers: ['workerId', 'name', 'skills', 'availability', 'rate'],
+    tasks: ['taskId', 'clientId', 'duration', 'skills', 'deadline']
   }
   
   if (clients) {

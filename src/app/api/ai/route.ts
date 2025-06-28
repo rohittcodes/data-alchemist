@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SessionManager } from '@/lib/storage'
-import { googleAIService } from '@/lib/ai/google-ai-service'
+import { googleAIService, getOfflineFallbacks } from '@/lib/ai/google-ai-service'
 import { applyDataFilter, getAvailableFields, getSampleData, buildContextualSuggestions } from '@/lib/ai/data-filter'
 
 export async function POST(request: NextRequest) {
@@ -68,8 +68,20 @@ async function handleSearch(query: string, sessionData: any) {
       sampleData
     )
     
+    console.log('Generated filter:', JSON.stringify(filter, null, 2))
+    console.log('Available fields:', availableFields)
+    
     // Apply filter to data
     const filteredResults = applyDataFilter(sessionData, filter)
+    
+    console.log('API returning filtered results:', {
+      totalResults: filteredResults.totalResults,
+      breakdown: {
+        clients: filteredResults.clients?.length || 0,
+        workers: filteredResults.workers?.length || 0,
+        tasks: filteredResults.tasks?.length || 0
+      }
+    })
     
     // Generate explanation
     const explanation = await googleAIService.explainResults(
@@ -88,25 +100,43 @@ async function handleSearch(query: string, sessionData: any) {
     }
     
     return NextResponse.json({
-      filteredData: filteredResults,
+      filteredData: {
+        clients: filteredResults.clients,
+        workers: filteredResults.workers,
+        tasks: filteredResults.tasks
+      },
       filter,
       explanation,
       suggestedQueries,
       query,
-      totalResults: filteredResults.totalResults
+      totalResults: filteredResults.totalResults,
+      summary: {
+        totalFound: filteredResults.totalResults,
+        breakdown: {
+          clients: filteredResults.clients?.length || 0,
+          workers: filteredResults.workers?.length || 0,
+          tasks: filteredResults.tasks?.length || 0
+        }
+      }
     })
     
   } catch (error) {
     console.error('Search error:', error)
     
-    // Fallback to contextual suggestions
+    // Use enhanced offline fallbacks when AI service is unavailable
     const availableFields = getAvailableFields(sessionData)
-    const sampleData = getSampleData(sessionData)
-    const fallbackSuggestions = buildContextualSuggestions(availableFields)
+    const fallbackData = getOfflineFallbacks()
+    const contextualSuggestions = buildContextualSuggestions(availableFields)
+    
+    // Combine AI fallbacks with contextual suggestions
+    const allSuggestions = [...fallbackData.suggestions, ...contextualSuggestions]
+    const uniqueSuggestions = [...new Set(allSuggestions)].slice(0, 8)
     
     return NextResponse.json({
-      error: 'Failed to process search query',
-      suggestedQueries: fallbackSuggestions,
+      error: 'AI search temporarily unavailable',
+      explanation: fallbackData.explanation,
+      suggestedQueries: uniqueSuggestions,
+      searchTips: fallbackData.searchTips,
       fallback: true
     }, { status: 500 })
   }
@@ -138,15 +168,21 @@ async function handleSuggestions(sessionData: any) {
   } catch (error) {
     console.error('Suggestions error:', error)
     
-    // Fallback to contextual suggestions only
+    // Enhanced fallback when AI service is unavailable
     const availableFields = getAvailableFields(sessionData)
-    const sampleData = getSampleData(sessionData)
-    const fallbackSuggestions = buildContextualSuggestions(availableFields)
+    const fallbackData = getOfflineFallbacks()
+    const contextualSuggestions = buildContextualSuggestions(availableFields)
+    
+    // Combine offline suggestions with contextual ones
+    const allSuggestions = [...fallbackData.suggestions, ...contextualSuggestions]
+    const uniqueSuggestions = [...new Set(allSuggestions)].slice(0, 10)
     
     return NextResponse.json({
-      suggestions: fallbackSuggestions,
+      suggestions: uniqueSuggestions,
       availableFields,
       dataTypes: Object.keys(availableFields),
+      explanation: fallbackData.explanation,
+      searchTips: fallbackData.searchTips,
       fallback: true
     })
   }

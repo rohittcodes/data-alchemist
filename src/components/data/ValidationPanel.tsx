@@ -21,10 +21,14 @@ import {
   Wand2,
   Loader2,
   Check,
-  X
+  X,
+  Zap,
+  UserX,
+  Settings
 } from 'lucide-react'
 import { ValidationSummary, ValidationError } from '@/lib'
 import { cn } from '@/lib/utils'
+import { canAutoFix } from '@/lib/validators/auto-fix'
 
 interface ValidationPanelProps {
   validation: ValidationSummary
@@ -32,6 +36,47 @@ interface ValidationPanelProps {
   onJumpToError?: (error: ValidationError) => void
   onDataUpdated?: () => void
   className?: string
+}
+
+// Categorize errors by fix type
+interface ErrorCategorization {
+  autoFixable: ValidationError[]
+  manualReview: ValidationError[]
+  businessDecisions: ValidationError[]
+}
+
+function categorizeErrors(errors: ValidationError[]): ErrorCategorization {
+  const autoFixable: ValidationError[] = []
+  const manualReview: ValidationError[] = []
+  const businessDecisions: ValidationError[] = []
+  
+  console.log('Categorizing', errors.length, 'errors')
+  
+  for (const error of errors) {
+    // Use the actual auto-fix logic to determine if error can be fixed
+    const isAutoFixable = canAutoFix(error)
+    console.log(`Error categorization: ${error.category}/${error.severity} - ${error.message.substring(0, 50)} -> ${isAutoFixable ? 'AUTO-FIXABLE' : 'MANUAL'}`)
+    
+    if (isAutoFixable) {
+      autoFixable.push(error)
+    }
+    // Business logic and skill matching requires human decision
+    else if (error.category === 'business' || error.category === 'skill') {
+      businessDecisions.push(error)
+    }
+    // Everything else needs manual review
+    else {
+      manualReview.push(error)
+    }
+  }
+  
+  console.log('Categorization results:', {
+    autoFixable: autoFixable.length,
+    manualReview: manualReview.length,
+    businessDecisions: businessDecisions.length
+  })
+  
+  return { autoFixable, manualReview, businessDecisions }
 }
 
 export const ValidationPanel: React.FC<ValidationPanelProps> = ({
@@ -42,9 +87,13 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
   className
 }) => {
   const [isBatchFixing, setIsBatchFixing] = useState(false)
+  const [isAutoFixing, setIsAutoFixing] = useState(false)
   const [batchFixStatus, setBatchFixStatus] = useState<'none' | 'success' | 'error'>('none')
+  const [autoFixStatus, setAutoFixStatus] = useState<'none' | 'success' | 'error'>('none')
+  const [autoFixResult, setAutoFixResult] = useState<{ totalFixed: number; totalAttempted: number } | null>(null)
   
   const { totalErrors, totalWarnings, errorsByCategory, criticalIssues, allErrors } = validation
+  const errorCategories = categorizeErrors(allErrors)
   
   const totalIssues = totalErrors + totalWarnings
   const healthScore = totalIssues === 0 ? 100 : Math.max(0, 100 - (totalErrors * 10 + totalWarnings * 3))
@@ -70,7 +119,81 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
   const severityColors: Record<string, string> = {
     high: 'text-red-600 bg-red-50',
     medium: 'text-orange-600 bg-orange-50',
-    low: 'text-yellow-600 bg-yellow-50'  }
+    low: 'text-yellow-600 bg-yellow-50'
+  }
+
+  // Auto-fix function for simple validation errors
+  const autoFixSimpleErrors = async () => {
+    if (isAutoFixing || errorCategories.autoFixable.length === 0) return
+    
+    setIsAutoFixing(true)
+    setAutoFixStatus('none')
+    
+    try {
+      console.log('Starting auto-fix for', errorCategories.autoFixable.length, 'errors')
+      console.log('Auto-fixable errors:', errorCategories.autoFixable)
+      
+      const response = await fetch('/api/ai/auto-fix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          errors: errorCategories.autoFixable
+        })
+      })
+      
+      const result = await response.json()
+      console.log('Auto-fix API response:', result)
+      
+      if (response.ok && result.success) {
+        setAutoFixStatus('success')
+        setAutoFixResult(result.summary) // Store the actual fix results
+        
+        // Force a refresh of the session data by calling onDataUpdated
+        console.log(`Auto-fixed ${result.summary.totalFixed} issues out of ${result.summary.totalAttempted} attempted`)
+        console.log('Details:', result.details)
+        
+        // Show more detailed feedback
+        if (result.summary.totalFixed > 0) {
+          console.log(`✅ Successfully fixed ${result.summary.totalFixed} issues`)
+          if (result.summary.totalRequireManual > 0) {
+            console.log(`⚠️ ${result.summary.totalRequireManual} issues still require manual review`)
+          }
+        }
+        
+        // Wait a moment then refresh the data
+        setTimeout(() => {
+          onDataUpdated?.()
+        }, 500)
+        
+        // Reset status after showing success
+        setTimeout(() => {
+          setAutoFixStatus('none')
+          setAutoFixResult(null)
+        }, 5000)
+      } else {
+        console.error('Auto-fix failed:', result.error || 'Unknown error')
+        console.error('Full response:', result)
+        setAutoFixStatus('error')
+        setTimeout(() => setAutoFixStatus('none'), 5000)
+      }
+    } catch (error) {
+      console.error('Auto-fix request failed:', error)
+      setAutoFixStatus('error')
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      if (errorMessage.includes('fetch failed') || errorMessage.includes('network')) {
+        console.error('Network error: AI services temporarily unavailable')
+      } else {
+        console.error('Auto-fix error:', errorMessage)
+      }
+      
+      setTimeout(() => setAutoFixStatus('none'), 5000)
+    } finally {
+      setIsAutoFixing(false)
+    }
+  }
 
   const batchFix = async () => {
     if (isBatchFixing || allErrors.length === 0) return
@@ -127,6 +250,15 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
     } catch (error) {
       console.error('Batch fix error:', error)
       setBatchFixStatus('error')
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      if (errorMessage.includes('fetch failed') || errorMessage.includes('network')) {
+        console.error('Network error: AI services temporarily unavailable for batch fixing')
+      } else {
+        console.error('Batch fix error:', errorMessage)
+      }
+      
       setTimeout(() => setBatchFixStatus('none'), 3000)
     } finally {
       setIsBatchFixing(false)
@@ -277,6 +409,92 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
             </div>
           </div>
         )}
+        
+        {/* Error Categorization by Fix Type */}
+        <div className="space-y-4">
+          <h4 className="font-medium">Fix Recommendations</h4>
+          
+          {/* Auto-fixable Errors */}
+          {errorCategories.autoFixable.length > 0 && (
+            <div className="border rounded-lg p-4 bg-blue-50">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-blue-800">Auto-fixable Issues</span>
+                  <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                    {errorCategories.autoFixable.length}
+                  </Badge>
+                </div>
+                <Button
+                  onClick={autoFixSimpleErrors}
+                  disabled={isAutoFixing}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {isAutoFixing ? (
+                    <>
+                      <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                      Fixing...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-3 w-3 mr-2" />
+                      Auto-fix All
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-sm text-blue-700 mb-2">
+                Simple formatting, data type, and default value issues that can be fixed automatically
+              </p>
+              {autoFixStatus === 'success' && autoFixResult && (
+                <div className="space-y-1">
+                  <Badge variant="default" className="bg-green-600">
+                    <Check className="h-3 w-3 mr-1" />
+                    {autoFixResult.totalFixed} of {autoFixResult.totalAttempted} issues fixed
+                  </Badge>
+                  {autoFixResult.totalAttempted - autoFixResult.totalFixed > 0 && (
+                    <div className="text-xs text-orange-600">
+                      {autoFixResult.totalAttempted - autoFixResult.totalFixed} issues still need manual review
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Manual Review Required */}
+          {errorCategories.manualReview.length > 0 && (
+            <div className="border rounded-lg p-4 bg-orange-50">
+              <div className="flex items-center gap-2 mb-2">
+                <Settings className="h-4 w-4 text-orange-600" />
+                <span className="font-medium text-orange-800">Manual Review Required</span>
+                <Badge variant="outline" className="bg-orange-100 text-orange-800">
+                  {errorCategories.manualReview.length}
+                </Badge>
+              </div>
+              <p className="text-sm text-orange-700">
+                Complex issues that need your attention and decision-making
+              </p>
+            </div>
+          )}
+          
+          {/* Business Decisions */}
+          {errorCategories.businessDecisions.length > 0 && (
+            <div className="border rounded-lg p-4 bg-purple-50">
+              <div className="flex items-center gap-2 mb-2">
+                <UserX className="h-4 w-4 text-purple-600" />
+                <span className="font-medium text-purple-800">Business Decisions</span>
+                <Badge variant="outline" className="bg-purple-100 text-purple-800">
+                  {errorCategories.businessDecisions.length}
+                </Badge>
+              </div>
+              <p className="text-sm text-purple-700">
+                Skill matching, hiring decisions, and business logic that requires human expertise
+              </p>
+            </div>
+          )}
+        </div>
         
         {/* Issues by Category */}
         <div className="space-y-3">

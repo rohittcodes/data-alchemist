@@ -16,13 +16,13 @@ export function validateReferences(
   
   // Create a set of valid client IDs for quick lookup
   const validClientIds = new Set(
-    clients.map(client => client.clientid?.toString().toLowerCase().trim())
+    clients.map(client => client.clientId?.toString().toLowerCase().trim())
       .filter(Boolean)
   )
   
   // Check if each task references a valid client
   tasks.forEach((task, index) => {
-    const clientId = task.clientid?.toString().toLowerCase().trim()
+    const clientId = task.clientId?.toString().toLowerCase().trim()
     
     if (clientId && !validClientIds.has(clientId)) {
       errors.push({
@@ -31,9 +31,9 @@ export function validateReferences(
         severity: 'high',
         dataType: 'tasks',
         row: index,
-        column: 'clientid',
-        message: `Task references non-existent client ID "${task.clientid}"`,
-        value: task.clientid,
+        column: 'clientId',
+        message: `Task references non-existent client ID "${task.clientId}"`,
+        value: task.clientId,
         suggestion: `Ensure the client ID exists in the clients dataset`
       })
     }

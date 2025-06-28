@@ -287,16 +287,29 @@ function DataPageContent() {
         <AISearch 
           sessionId={sessionData.sessionId}
           onResults={(results: SearchResults | null) => {
+            console.log('AISearch onResults called with:', results)
+            console.log('Current filteredData state:', filteredData)
+            console.log('Current searchActive state:', searchActive)
+            
             if (results && results.filteredData) {
+              console.log('Setting filtered data:', results.filteredData)
+              console.log('Filtered data breakdown:', {
+                clients: results.filteredData.clients?.length || 0,
+                workers: results.filteredData.workers?.length || 0,
+                tasks: results.filteredData.tasks?.length || 0
+              })
+              
               setFilteredData(results.filteredData)
               setSearchActive(true)
               
               // If results specify a specific data type, switch to that tab
               if (results.filter && results.filter.dataType) {
+                console.log('Switching to tab:', results.filter.dataType)
                 setActiveTab(results.filter.dataType)
               }
             } else {
               // Clear search results
+              console.log('Clearing search results')
               setFilteredData(null)
               setSearchActive(false)
             }
@@ -408,7 +421,16 @@ function DataPageContent() {
                 {sessionData.clients ? (
                   <div data-testid="clients-table">
                     <DataTable
-                      data={searchActive && filteredData?.clients ? filteredData.clients : sessionData.clients.rows}
+                      data={(() => {
+                        const dataToShow = searchActive && filteredData?.clients ? filteredData.clients : sessionData.clients.rows
+                        console.log('DataTable for clients receiving data:', {
+                          searchActive,
+                          hasFilteredData: !!filteredData?.clients,
+                          dataLength: dataToShow.length,
+                          sampleRow: dataToShow[0]
+                        })
+                        return dataToShow
+                      })()}
                       onCellEdit={(rowIndex, columnId, value) => 
                         handleCellEdit('clients', rowIndex, columnId, value)
                       }
@@ -442,7 +464,16 @@ function DataPageContent() {
                 {sessionData.workers ? (
                   <div data-testid="workers-table">
                     <DataTable
-                      data={searchActive && filteredData?.workers ? filteredData.workers : sessionData.workers.rows}
+                      data={(() => {
+                        const dataToShow = searchActive && filteredData?.workers ? filteredData.workers : sessionData.workers.rows
+                        console.log('DataTable for workers receiving data:', {
+                          searchActive,
+                          hasFilteredData: !!filteredData?.workers,
+                          dataLength: dataToShow.length,
+                          sampleRow: dataToShow[0]
+                        })
+                        return dataToShow
+                      })()}
                       onCellEdit={(rowIndex, columnId, value) => 
                         handleCellEdit('workers', rowIndex, columnId, value)
                       }
@@ -476,7 +507,16 @@ function DataPageContent() {
                 {sessionData.tasks ? (
                   <div data-testid="tasks-table">
                     <DataTable
-                      data={searchActive && filteredData?.tasks ? filteredData.tasks : sessionData.tasks.rows}
+                      data={(() => {
+                        const dataToShow = searchActive && filteredData?.tasks ? filteredData.tasks : sessionData.tasks.rows
+                        console.log('DataTable for tasks receiving data:', {
+                          searchActive,
+                          hasFilteredData: !!filteredData?.tasks,
+                          dataLength: dataToShow.length,
+                          sampleRow: dataToShow[0]
+                        })
+                        return dataToShow
+                      })()}
                       onCellEdit={(rowIndex, columnId, value) => 
                         handleCellEdit('tasks', rowIndex, columnId, value)
                       }

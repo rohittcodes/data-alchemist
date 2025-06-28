@@ -6,6 +6,7 @@ export * from './references'
 export * from './skills'
 export * from './datatype'
 export * from './business'
+export * from './auto-fix'
 
 import { ValidationError, ValidationSummary } from './types'
 import { validateDuplicateIDs } from './duplicate'

@@ -168,13 +168,17 @@ export interface FilterCondition {
 }
 
 export interface SearchResults {
-  filter: SearchFilter
   filteredData: {
     clients?: DataRow[]
     workers?: DataRow[]
     tasks?: DataRow[]
   }
-  summary: {
+  filter: any
+  explanation?: string
+  suggestedQueries?: string[]
+  totalResults: number
+  query?: string
+  summary?: {
     totalFound: number
     breakdown: Record<string, number>
   }

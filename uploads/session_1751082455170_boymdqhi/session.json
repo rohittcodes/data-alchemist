@@ -1,0 +1,387 @@
+{
+  "sessionId": "1751082455170_boymdqhi",
+  "created": 1751082455170,
+  "lastModified": 1751082455228,
+  "status": "uploaded",
+  "clients": {
+    "headers": [
+      "ClientID",
+      "ClientName",
+      "Requirements",
+      "Priority"
+    ],
+    "rows": [
+      {
+        "ClientID": "CLI001",
+        "ClientName": "TechCorp Solutions",
+        "Requirements": "Full-stack development team for e-commerce platform",
+        "Priority": "1"
+      },
+      {
+        "ClientID": "CLI002",
+        "ClientName": "HealthFirst Medical",
+        "Requirements": "Healthcare app development with HIPAA compliance",
+        "Priority": "2"
+      },
+      {
+        "ClientID": "CLI003",
+        "ClientName": "GreenEnergy Co",
+        "Requirements": "Renewable energy monitoring dashboard",
+        "Priority": "3"
+      },
+      {
+        "ClientID": "CLI004",
+        "ClientName": "EduLearn Academy",
+        "Requirements": "Online learning platform with video streaming",
+        "Priority": "1"
+      },
+      {
+        "ClientID": "CLI005",
+        "ClientName": "FinanceSecure Bank",
+        "Requirements": "Banking application with advanced security",
+        "Priority": "2"
+      },
+      {
+        "ClientID": "CLI006",
+        "ClientName": "RetailMax Chain",
+        "Requirements": "Inventory management system for 50+ stores",
+        "Priority": "3"
+      },
+      {
+        "ClientID": "CLI007",
+        "ClientName": "AutoDrive Motors",
+        "Requirements": "Connected car software platform",
+        "Priority": "1"
+      },
+      {
+        "ClientID": "CLI008",
+        "ClientName": "FoodDelivery Express",
+        "Requirements": "Real-time delivery tracking application",
+        "Priority": "2"
+      },
+      {
+        "ClientID": "CLI009",
+        "ClientName": "RealEstate Pro",
+        "Requirements": "Property management and CRM system",
+        "Priority": "3"
+      },
+      {
+        "ClientID": "CLI010",
+        "ClientName": "SportsFan Network",
+        "Requirements": "Social media platform for sports enthusiasts",
+        "Priority": "2"
+      }
+    ],
+    "rowCount": 10,
+    "fileName": "clients.csv",
+    "fileSize": 743
+  },
+  "workers": {
+    "headers": [
+      "WorkerID",
+      "Name",
+      "Skills",
+      "Availability",
+      "Rate"
+    ],
+    "rows": [
+      {
+        "WorkerID": "WRK001",
+        "Name": "Alice Johnson",
+        "Skills": "React|Node.js|TypeScript|PostgreSQL",
+        "Availability": "Monday-Friday 9AM-6PM",
+        "Rate": "85"
+      },
+      {
+        "WorkerID": "WRK002",
+        "Name": "Bob Smith",
+        "Skills": "Python|Django|AWS|Docker",
+        "Availability": "Monday-Friday 10AM-7PM",
+        "Rate": "90"
+      },
+      {
+        "WorkerID": "WRK003",
+        "Name": "Carol Davis",
+        "Skills": "Vue.js|Express|MySQL|Redis",
+        "Availability": "Monday-Friday 8AM-5PM",
+        "Rate": "80"
+      },
+      {
+        "WorkerID": "WRK004",
+        "Name": "David Wilson",
+        "Skills": "Angular|.NET|Azure|SQL Server",
+        "Availability": "Monday-Friday 9AM-6PM",
+        "Rate": "95"
+      },
+      {
+        "WorkerID": "WRK005",
+        "Name": "Emma Brown",
+        "Skills": "React Native|Flutter|Firebase",
+        "Availability": "Monday-Saturday 10AM-8PM",
+        "Rate": "75"
+      },
+      {
+        "WorkerID": "WRK006",
+        "Name": "Frank Miller",
+        "Skills": "PHP|Laravel|MongoDB|Nginx",
+        "Availability": "Monday-Friday 9AM-5PM",
+        "Rate": "70"
+      },
+      {
+        "WorkerID": "WRK007",
+        "Name": "Grace Lee",
+        "Skills": "Java|Spring Boot|Kubernetes|Jenkins",
+        "Availability": "Monday-Friday 8AM-4PM",
+        "Rate": "100"
+      },
+      {
+        "WorkerID": "WRK008",
+        "Name": "Henry Taylor",
+        "Skills": "Go|Microservices|GraphQL|Elasticsearch",
+        "Availability": "Monday-Friday 11AM-8PM",
+        "Rate": "105"
+      },
+      {
+        "WorkerID": "WRK009",
+        "Name": "Ivy Chen",
+        "Skills": "React|TypeScript|Next.js|Vercel",
+        "Availability": "Monday-Friday 9AM-6PM",
+        "Rate": "88"
+      },
+      {
+        "WorkerID": "WRK010",
+        "Name": "Jack Anderson",
+        "Skills": "Python|FastAPI|PostgreSQL|Celery",
+        "Availability": "Monday-Friday 10AM-7PM",
+        "Rate": "92"
+      },
+      {
+        "WorkerID": "WRK011",
+        "Name": "Kate Robinson",
+        "Skills": "Vue.js|Nuxt.js|Tailwind|Strapi",
+        "Availability": "Monday-Friday 8AM-5PM",
+        "Rate": "78"
+      },
+      {
+        "WorkerID": "WRK012",
+        "Name": "Liam Garcia",
+        "Skills": "Swift|iOS|Objective-C|Core Data",
+        "Availability": "Monday-Friday 9AM-6PM",
+        "Rate": "98"
+      },
+      {
+        "WorkerID": "WRK013",
+        "Name": "Maya Patel",
+        "Skills": "Kotlin|Android|Room|Retrofit",
+        "Availability": "Monday-Friday 10AM-7PM",
+        "Rate": "96"
+      },
+      {
+        "WorkerID": "WRK014",
+        "Name": "Noah Williams",
+        "Skills": "C#|Blazor|Entity Framework|SignalR",
+        "Availability": "Monday-Friday 8AM-5PM",
+        "Rate": "94"
+      },
+      {
+        "WorkerID": "WRK015",
+        "Name": "Olivia Martinez",
+        "Skills": "JavaScript|Express|Socket.io|Redis",
+        "Availability": "Monday-Saturday 9AM-7PM",
+        "Rate": "82"
+      }
+    ],
+    "rowCount": 15,
+    "fileName": "workers.csv",
+    "fileSize": 1208
+  },
+  "tasks": {
+    "headers": [
+      "TaskID",
+      "ClientID",
+      "Duration",
+      "Skills",
+      "Deadline"
+    ],
+    "rows": [
+      {
+        "TaskID": "TSK001",
+        "ClientID": "CLI001",
+        "Duration": "120",
+        "Skills": "React|Node.js|PostgreSQL",
+        "Deadline": "2025-02-15"
+      },
+      {
+        "TaskID": "TSK002",
+        "ClientID": "CLI001",
+        "Duration": "80",
+        "Skills": "TypeScript|Express|Redis",
+        "Deadline": "2025-02-28"
+      },
+      {
+        "TaskID": "TSK003",
+        "ClientID": "CLI002",
+        "Duration": "160",
+        "Skills": "Python|Django|PostgreSQL",
+        "Deadline": "2025-03-10"
+      },
+      {
+        "TaskID": "TSK004",
+        "ClientID": "CLI002",
+        "Duration": "40",
+        "Skills": "HIPAA|Security|Encryption",
+        "Deadline": "2025-01-30"
+      },
+      {
+        "TaskID": "TSK005",
+        "ClientID": "CLI003",
+        "Duration": "100",
+        "Skills": "Vue.js|Node.js|MySQL",
+        "Deadline": "2025-02-20"
+      },
+      {
+        "TaskID": "TSK006",
+        "ClientID": "CLI003",
+        "Duration": "60",
+        "Skills": "Data Visualization|Charts",
+        "Deadline": "2025-02-05"
+      },
+      {
+        "TaskID": "TSK007",
+        "ClientID": "CLI004",
+        "Duration": "200",
+        "Skills": "React|Video Streaming|WebRTC",
+        "Deadline": "2025-03-15"
+      },
+      {
+        "TaskID": "TSK008",
+        "ClientID": "CLI004",
+        "Duration": "90",
+        "Skills": "AWS|CDN|S3",
+        "Deadline": "2025-02-25"
+      },
+      {
+        "TaskID": "TSK009",
+        "ClientID": "CLI005",
+        "Duration": "180",
+        "Skills": "C#|.NET|SQL Server",
+        "Deadline": "2025-03-20"
+      },
+      {
+        "TaskID": "TSK010",
+        "ClientID": "CLI005",
+        "Duration": "120",
+        "Skills": "Security|Encryption|OAuth",
+        "Deadline": "2025-03-05"
+      },
+      {
+        "TaskID": "TSK011",
+        "ClientID": "CLI006",
+        "Duration": "150",
+        "Skills": "PHP|Laravel|MySQL",
+        "Deadline": "2025-02-18"
+      },
+      {
+        "TaskID": "TSK012",
+        "ClientID": "CLI006",
+        "Duration": "70",
+        "Skills": "Inventory|Barcode|RFID",
+        "Deadline": "2025-02-08"
+      },
+      {
+        "TaskID": "TSK013",
+        "ClientID": "CLI007",
+        "Duration": "220",
+        "Skills": "Java|Spring Boot|Microservices",
+        "Deadline": "2025-04-01"
+      },
+      {
+        "TaskID": "TSK014",
+        "ClientID": "CLI007",
+        "Duration": "110",
+        "Skills": "IoT|Automotive|CAN Bus",
+        "Deadline": "2025-03-12"
+      },
+      {
+        "TaskID": "TSK015",
+        "ClientID": "CLI008",
+        "Duration": "130",
+        "Skills": "React Native|GPS|Maps",
+        "Deadline": "2025-02-22"
+      },
+      {
+        "TaskID": "TSK016",
+        "ClientID": "CLI008",
+        "Duration": "85",
+        "Skills": "Real-time|Socket.io|Push Notifications",
+        "Deadline": "2025-02-12"
+      },
+      {
+        "TaskID": "TSK017",
+        "ClientID": "CLI009",
+        "Duration": "140",
+        "Skills": "Angular|.NET|SQL Server",
+        "Deadline": "2025-03-08"
+      },
+      {
+        "TaskID": "TSK018",
+        "ClientID": "CLI009",
+        "Duration": "95",
+        "Skills": "CRM|Property|Real Estate",
+        "Deadline": "2025-02-28"
+      },
+      {
+        "TaskID": "TSK019",
+        "ClientID": "CLI010",
+        "Duration": "160",
+        "Skills": "React|Social Media|Chat",
+        "Deadline": "2025-03-18"
+      },
+      {
+        "TaskID": "TSK020",
+        "ClientID": "CLI010",
+        "Duration": "75",
+        "Skills": "Sports API|Data Analytics",
+        "Deadline": "2025-02-15"
+      },
+      {
+        "TaskID": "TSK021",
+        "ClientID": "CLI001",
+        "Duration": "60",
+        "Skills": "Testing|QA|Automation",
+        "Deadline": "2025-02-10"
+      },
+      {
+        "TaskID": "TSK022",
+        "ClientID": "CLI002",
+        "Duration": "90",
+        "Skills": "Mobile|iOS|Swift",
+        "Deadline": "2025-03-01"
+      },
+      {
+        "TaskID": "TSK023",
+        "ClientID": "CLI003",
+        "Duration": "110",
+        "Skills": "Android|Kotlin|Mobile",
+        "Deadline": "2025-02-25"
+      },
+      {
+        "TaskID": "TSK024",
+        "ClientID": "CLI004",
+        "Duration": "80",
+        "Skills": "DevOps|CI/CD|Docker",
+        "Deadline": "2025-02-20"
+      },
+      {
+        "TaskID": "TSK025",
+        "ClientID": "CLI005",
+        "Duration": "70",
+        "Skills": "UI/UX|Design|Figma",
+        "Deadline": "2025-02-14"
+      }
+    ],
+    "rowCount": 25,
+    "fileName": "tasks.csv",
+    "fileSize": 1368
+  }
+}

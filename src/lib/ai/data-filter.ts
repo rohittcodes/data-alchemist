@@ -19,6 +19,109 @@ export interface FilteredResults {
   totalResults: number
 }
 
+export interface IntelligentFilter extends DataFilter {
+  reasoning?: string
+  confidence?: 'high' | 'medium' | 'low'
+  originalQuery?: string
+}
+
+/**
+ * Enhanced column name mappings for intelligent filtering
+ */
+const INTELLIGENT_FIELD_MAPPINGS: Record<string, Record<string, string[]>> = {
+  clients: {
+    'clientId': ['clientid', 'client_id', 'CustomerID', 'customer_id', 'company_id', 'id'],
+    'clientName': ['clientname', 'client_name', 'company_name', 'customer_name', 'name'],
+    'requirements': ['requirements', 'description', 'project_description', 'needs'],
+    'priority': ['priority', 'urgency', 'importance', 'level']
+  },
+  workers: {
+    'workerId': ['workerid', 'worker_id', 'employee_id', 'staff_id', 'id'],
+    'skills': ['skills', 'technologies', 'expertise', 'competencies', 'abilities'],
+    'availability': ['availability', 'schedule', 'working_hours', 'hours'],
+    'rate': ['rate', 'hourly_rate', 'salary', 'cost', 'price', 'wage', 'pay']
+  },
+  tasks: {
+    'taskId': ['taskid', 'task_id', 'project_id', 'job_id', 'id'],
+    'duration': ['duration', 'hours', 'estimated_hours', 'time_required'],
+    'deadline': ['deadline', 'due_date', 'end_date', 'completion_date'],
+    'skills': ['skills', 'technologies', 'requirements', 'tech_stack']
+  }
+}
+
+/**
+ * Map field name variations to canonical field names
+ */
+export function mapFieldName(dataType: string, fieldName: string): string {
+  const mappings = INTELLIGENT_FIELD_MAPPINGS[dataType]
+  if (!mappings) return fieldName
+
+  const normalizedInput = fieldName.toLowerCase().trim()
+  
+  for (const [canonical, variations] of Object.entries(mappings)) {
+    if (variations.includes(normalizedInput) || canonical.toLowerCase() === normalizedInput) {
+      return canonical
+    }
+  }
+  
+  return fieldName
+}
+
+/**
+ * Apply AI-generated filter with intelligent field mapping
+ */
+export function applyIntelligentFilter(
+  sessionData: {
+    clients?: ParsedData
+    workers?: ParsedData
+    tasks?: ParsedData
+  },
+  filter: IntelligentFilter
+): FilteredResults {
+  const results: FilteredResults = { totalResults: 0 }
+  
+  // Get the target dataset
+  const targetData = sessionData[filter.dataType]
+  if (!targetData || !targetData.rows) {
+    return results
+  }
+  
+  // Apply filters with intelligent field mapping
+  const filteredRows = targetData.rows.filter((row: DataRow) => 
+    filter.conditions.every(condition => {
+      // Try original field name first
+      if (row[condition.field] !== undefined) {
+        return matchesCondition(row, condition)
+      }
+      
+      // Try mapped field names
+      const mappedField = mapFieldName(filter.dataType, condition.field)
+      if (row[mappedField] !== undefined) {
+        const mappedCondition = { ...condition, field: mappedField }
+        return matchesCondition(row, mappedCondition)
+      }
+      
+      // Try case-insensitive field matching
+      const availableFields = Object.keys(row)
+      const matchingField = availableFields.find(field => 
+        field.toLowerCase() === condition.field.toLowerCase()
+      )
+      
+      if (matchingField) {
+        const caseInsensitiveCondition = { ...condition, field: matchingField }
+        return matchesCondition(row, caseInsensitiveCondition)
+      }
+      
+      return false
+    })
+  )
+  
+  results[filter.dataType] = filteredRows
+  results.totalResults = filteredRows.length
+  
+  return results
+}
+
 /**
  * Apply AI-generated filter to session data
  */
@@ -35,13 +138,49 @@ export function applyDataFilter(
   // Get the target dataset
   const targetData = sessionData[filter.dataType]
   if (!targetData || !targetData.rows) {
+    console.log(`No data found for ${filter.dataType}`)
     return results
   }
   
-  // Apply filters
+  console.log(`Filtering ${filter.dataType}:`, {
+    originalCount: targetData.rows.length,
+    conditions: filter.conditions,
+    sampleRow: targetData.rows[0],
+    availableFields: Object.keys(targetData.rows[0] || {})
+  })
+  
+  // Apply filters with intelligent field mapping
   const filteredRows = targetData.rows.filter((row: DataRow) => 
-    filter.conditions.every(condition => matchesCondition(row, condition))
+    filter.conditions.every(condition => {
+      // Try original field name first
+      if (row[condition.field] !== undefined) {
+        return matchesCondition(row, condition)
+      }
+      
+      // Try mapped field names
+      const mappedField = mapFieldName(filter.dataType, condition.field)
+      if (row[mappedField] !== undefined) {
+        const mappedCondition = { ...condition, field: mappedField }
+        return matchesCondition(row, mappedCondition)
+      }
+      
+      // Try case-insensitive field matching
+      const availableFields = Object.keys(row)
+      const matchingField = availableFields.find(field => 
+        field.toLowerCase() === condition.field.toLowerCase()
+      )
+      
+      if (matchingField) {
+        const caseInsensitiveCondition = { ...condition, field: matchingField }
+        return matchesCondition(row, caseInsensitiveCondition)
+      }
+      
+      console.log(`Field '${condition.field}' not found in row. Available fields:`, Object.keys(row))
+      return false
+    })
   )
+  
+  console.log(`Filtering result: ${filteredRows.length}/${targetData.rows.length} rows match`)
   
   results[filter.dataType] = filteredRows
   results.totalResults = filteredRows.length
@@ -208,4 +347,47 @@ export function buildContextualSuggestions(
   }
   
   return suggestions.slice(0, 8) // Limit to 8 suggestions
+}
+
+/**
+ * Demonstrate intelligent column name handling examples
+ */
+export function getIntelligentFilteringExamples(): Array<{
+  query: string
+  description: string
+  csvVariations: string[]
+  mappedField: string
+}> {
+  return [
+    {
+      query: "Show me expensive developers",
+      description: "Maps 'developers' to workers and 'expensive' to high rate values",
+      csvVariations: ["hourly_rate", "salary", "cost", "wage", "pay"],
+      mappedField: "rate"
+    },
+    {
+      query: "Find high priority companies",
+      description: "Maps 'companies' to clients and understands priority levels",
+      csvVariations: ["company_name", "client_name", "customer_name"],
+      mappedField: "clientName"
+    },
+    {
+      query: "React specialists with availability",
+      description: "Handles technology skills and worker availability",
+      csvVariations: ["technologies", "expertise", "competencies", "working_hours"],
+      mappedField: "skills, availability"
+    },
+    {
+      query: "Urgent tasks due soon",
+      description: "Maps time-based queries to deadline fields",
+      csvVariations: ["due_date", "completion_date", "target_date"],
+      mappedField: "deadline"
+    },
+    {
+      query: "Long duration projects",
+      description: "Understands duration and time estimation fields",
+      csvVariations: ["estimated_hours", "time_required", "effort"],
+      mappedField: "duration"
+    }
+  ]
 }

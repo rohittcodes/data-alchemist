@@ -5,6 +5,66 @@ import type { ParsedData } from '../types'
 // Re-export types for convenience
 export type { ParsedData, DataRow } from '../types'
 
+// Field mapping for consistent data structure
+const FIELD_MAPPINGS: Record<string, string> = {
+  // Client fields
+  'clientid': 'clientId',
+  'client_id': 'clientId',
+  'ClientID': 'clientId',
+  'Client ID': 'clientId',
+  'clientname': 'clientName',
+  'client_name': 'clientName',
+  'ClientName': 'clientName',
+  'Client Name': 'clientName',
+  
+  // Worker fields
+  'workerid': 'workerId',
+  'worker_id': 'workerId',
+  'WorkerID': 'workerId',
+  'Worker ID': 'workerId',
+  
+  // Task fields
+  'taskid': 'taskId',
+  'task_id': 'taskId',
+  'TaskID': 'taskId',
+  'Task ID': 'taskId',
+}
+
+/**
+ * Normalize field names to match our expected interface structure
+ */
+function normalizeFieldName(header: string): string {
+  const trimmed = header.trim()
+  // Check direct mapping first
+  if (FIELD_MAPPINGS[trimmed]) {
+    return FIELD_MAPPINGS[trimmed]
+  }
+  
+  // Check case-insensitive mapping
+  const lowerHeader = trimmed.toLowerCase()
+  if (FIELD_MAPPINGS[lowerHeader]) {
+    return FIELD_MAPPINGS[lowerHeader]
+  }
+  
+  // Convert to camelCase for consistency
+  return trimmed.replace(/[\s_-]+(.)/g, (_, char) => char.toUpperCase())
+    .replace(/^[A-Z]/, char => char.toLowerCase())
+}
+
+/**
+ * Normalize row data to use consistent field names
+ */
+function normalizeRowData(row: Record<string, any>): Record<string, any> {
+  const normalizedRow: Record<string, any> = {}
+  
+  for (const [key, value] of Object.entries(row)) {
+    const normalizedKey = normalizeFieldName(key)
+    normalizedRow[normalizedKey] = value
+  }
+  
+  return normalizedRow
+}
+
 export async function parseCSV(file: File): Promise<ParsedData> {
   console.log('parseCSV: Starting to parse', file.name)
   
@@ -30,19 +90,24 @@ export async function parseCSV(file: File): Promise<ParsedData> {
             return
           }
 
-          const headers = results.meta.fields || []
-          const rows = results.data as Record<string, any>[]
+          const originalHeaders = results.meta.fields || []
+          const originalRows = results.data as Record<string, any>[]
 
-          console.log('CSV parsed successfully:', {
-            headers,
-            rowCount: rows.length,
-            firstRow: rows[0]
+          // Normalize headers and data
+          const normalizedHeaders = originalHeaders.map(normalizeFieldName)
+          const normalizedRows = originalRows.map(normalizeRowData)
+
+          console.log('CSV parsed and normalized successfully:', {
+            originalHeaders,
+            normalizedHeaders,
+            rowCount: normalizedRows.length,
+            firstRow: normalizedRows[0]
           })
 
           resolve({
-            headers,
-            rows,
-            rowCount: rows.length,
+            headers: normalizedHeaders,
+            rows: normalizedRows,
+            rowCount: normalizedRows.length,
             fileName: file.name,
             fileSize: file.size
           })
@@ -83,28 +148,33 @@ export async function parseXLSX(file: File): Promise<ParsedData> {
         return
       }
       
-      const headers = jsonData[0] as string[]
+      const originalHeaders = jsonData[0] as string[]
       const dataRows = jsonData.slice(1)
       
-      // Convert rows to objects
-      const rows = dataRows.map(row => {
+      // Convert rows to objects with original headers
+      const originalRows = dataRows.map(row => {
         const rowObj: Record<string, any> = {}
-        headers.forEach((header, index) => {
+        originalHeaders.forEach((header, index) => {
           rowObj[header] = (row as any[])[index] || ''
         })
         return rowObj
       })
 
-      console.log('Excel parsed successfully:', {
-        headers,
-        rowCount: rows.length,
-        firstRow: rows[0]
+      // Normalize headers and data
+      const normalizedHeaders = originalHeaders.map(normalizeFieldName)
+      const normalizedRows = originalRows.map(normalizeRowData)
+
+      console.log('Excel parsed and normalized successfully:', {
+        originalHeaders,
+        normalizedHeaders,
+        rowCount: normalizedRows.length,
+        firstRow: normalizedRows[0]
       })
 
       resolve({
-        headers,
-        rows,
-        rowCount: rows.length,
+        headers: normalizedHeaders,
+        rows: normalizedRows,
+        rowCount: normalizedRows.length,
         fileName: file.name,
         fileSize: file.size
       })

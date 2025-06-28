@@ -8,6 +8,10 @@ export interface ValidationError {
   message: string
   value?: string | number | boolean | null
   suggestion?: string
+  autoFixable?: boolean
+  fixType?: 'auto' | 'manual' | 'conditional'
+  fixReason?: string
+  autoFixValue?: string | number | boolean | null
 }
 
 export interface ValidationSummary {

@@ -1,6 +1,23 @@
 import { ValidationError, DataRow, DataType } from './types'
 
 /**
+ * Helper function to create validation errors with auto-fix metadata
+ */
+function createValidationError(
+  baseError: Omit<ValidationError, 'autoFixable' | 'fixType'>,
+  autoFixable: boolean = false,
+  fixType: 'auto' | 'manual' | 'conditional' = 'manual',
+  fixReason?: string
+): ValidationError {
+  return {
+    ...baseError,
+    autoFixable,
+    fixType,
+    fixReason
+  }
+}
+
+/**
  * Validates numeric values and ranges
  */
 export function validateNumericFields(
@@ -17,7 +34,7 @@ export function validateNumericFields(
         if (row.rate !== undefined && row.rate !== null) {
           const rate = parseFloat(String(row.rate))
           if (isNaN(rate)) {
-            errors.push({
+            errors.push(createValidationError({
               type: 'error',
               category: 'datatype',
               severity: 'medium',
@@ -27,9 +44,9 @@ export function validateNumericFields(
               message: `Invalid rate format: "${row.rate}"`,
               value: row.rate,
               suggestion: 'Rate should be a valid number (e.g., 25.50)'
-            })
+            }, true, 'auto', 'Can extract numeric value from string'))
           } else if (rate < 0) {
-            errors.push({
+            errors.push(createValidationError({
               type: 'error',
               category: 'datatype',
               severity: 'medium',
@@ -39,9 +56,9 @@ export function validateNumericFields(
               message: `Rate cannot be negative: ${rate}`,
               value: row.rate,
               suggestion: 'Rate should be a positive number'
-            })
+            }))
           } else if (rate > 1000) {
-            errors.push({
+            errors.push(createValidationError({
               type: 'warning',
               category: 'datatype',
               severity: 'low',
@@ -51,7 +68,7 @@ export function validateNumericFields(
               message: `Unusually high rate: $${rate}/hour`,
               value: row.rate,
               suggestion: 'Please verify this rate is correct'
-            })
+            }))
           }
         }
         
