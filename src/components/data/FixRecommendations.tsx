@@ -5,10 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { 
-  Users, 
-  Briefcase, 
   CheckSquare, 
-  AlertTriangle, 
   Clock, 
   TrendingUp,
   BookOpen,
@@ -136,8 +133,7 @@ function generateRecommendations(
 
 export const FixRecommendations: React.FC<FixRecommendationsProps> = ({
   manualReviewErrors,
-  businessDecisionErrors,
-  sessionId
+  businessDecisionErrors
 }) => {
   const recommendations = generateRecommendations(manualReviewErrors, businessDecisionErrors)
 

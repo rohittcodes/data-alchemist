@@ -113,7 +113,10 @@ export async function DELETE(
     }
 
     // Remove rule from session
-    const rules = (sessionData.rules || []).filter((rule: any) => rule.id !== ruleId)
+    const rules = (sessionData.rules || []).filter((rule: unknown) => {
+      const r = rule as { id: string }
+      return r.id !== ruleId
+    })
     
     // Update session
     const updatedSession = {

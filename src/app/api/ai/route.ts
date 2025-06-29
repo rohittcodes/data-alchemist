@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SessionManager } from '@/lib/storage'
+import { SessionManager, type SessionData } from '@/lib/storage'
 import { googleAIService, getOfflineFallbacks } from '@/lib/ai/google-ai-service'
 import { applyDataFilter, getAvailableFields, getSampleData, buildContextualSuggestions } from '@/lib/ai/data-filter'
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleSearch(query: string, sessionData: any) {
+async function handleSearch(query: string, sessionData: SessionData) {
   if (!query || query.trim().length === 0) {
     return NextResponse.json(
       { error: 'Search query is required' },
@@ -142,7 +142,7 @@ async function handleSearch(query: string, sessionData: any) {
   }
 }
 
-async function handleSuggestions(sessionData: any) {
+async function handleSuggestions(sessionData: SessionData) {
   try {
     const availableFields = getAvailableFields(sessionData)
     const sampleData = getSampleData(sessionData)

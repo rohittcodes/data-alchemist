@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,15 +16,23 @@ import {
   X
 } from 'lucide-react'
 
+interface FilterResult {
+  filteredData: Record<string, unknown>[]
+  filter: Record<string, unknown>
+  explanation: string
+  suggestedQueries?: string[]
+  totalResults: number
+}
+
 interface AISearchProps {
   sessionId: string
-  onResults?: (results: any) => void
+  onResults?: (results: FilterResult) => void
   className?: string
 }
 
 interface SearchResult {
-  filteredData: any
-  filter: any
+  filteredData: Record<string, unknown>[]
+  filter: Record<string, unknown>
   explanation: string
   suggestedQueries?: string[]
   totalResults: number
@@ -42,12 +50,7 @@ export const AISearch: React.FC<AISearchProps> = ({
   const [lastResult, setLastResult] = useState<SearchResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Load suggestions on component mount
-  useEffect(() => {
-    loadSuggestions()
-  }, [sessionId])
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     try {
       setLoadingSuggestions(true)
       const response = await fetch('/api/ai', {
@@ -68,7 +71,12 @@ export const AISearch: React.FC<AISearchProps> = ({
     } finally {
       setLoadingSuggestions(false)
     }
-  }
+  }, [sessionId])
+
+  // Load suggestions on component mount
+  useEffect(() => {
+    loadSuggestions()
+  }, [loadSuggestions])
 
   const handleSearch = async (searchQuery?: string) => {
     const queryToUse = searchQuery || query
@@ -124,7 +132,16 @@ export const AISearch: React.FC<AISearchProps> = ({
   const clearResults = () => {
     setLastResult(null)
     setError(null)
-    onResults?.(null)
+    // Only call onResults if it's defined, and don't pass null
+    if (onResults && lastResult) {
+      // Reset to empty result instead of null
+      onResults({
+        filteredData: [],
+        filter: {},
+        explanation: '',
+        totalResults: 0
+      })
+    }
   }
 
   return (

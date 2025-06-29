@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Suspense } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,14 +9,14 @@ import { DataTable } from "@/components/data"
 import { ArrowLeft, Download, FileText, AlertCircle } from "lucide-react"
 import { AppLayout } from "@/components/layout/AppLayout"
 
-export default function DataViewPage() {
+function DataViewPageContent() {
   const params = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
   const type = params.type as string
   const sessionId = searchParams.get('session')
   
-  const [data, setData] = React.useState<any[]>([])
+  const [data, setData] = React.useState<Record<string, unknown>[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -200,5 +201,19 @@ export default function DataViewPage() {
         </Card>
       </div>
     </AppLayout>
+  )
+}
+
+export default function DataViewPage() {
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">Loading data view...</div>
+        </div>
+      </AppLayout>
+    }>
+      <DataViewPageContent />
+    </Suspense>
   )
 }

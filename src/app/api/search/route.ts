@@ -1,5 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SessionManager } from '@/lib/storage'
+import { SessionManager, type SessionData } from '@/lib/storage'
+
+interface SearchMatch {
+  field: string
+  value: string
+  matchType: 'exact'
+}
+
+interface RowMatch {
+  rowIndex: number
+  row: Record<string, unknown>
+  matches: SearchMatch[]
+}
+
+interface MetadataMatch {
+  type: 'session_info'
+  matches: Array<{ field: string; value: string }>
+}
+
+interface SessionResult {
+  sessionId: string
+  matches: {
+    clients: RowMatch[]
+    workers: RowMatch[]
+    tasks: RowMatch[]
+    metadata: MetadataMatch[]
+  }
+  totalMatches: number
+  metadata: {
+    created: number
+    status: string
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,7 +59,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const searchResults = []
+    const searchResults: SessionResult[] = []
     const queryLower = query.toLowerCase()
 
     for (const key of sessionKeys) {
@@ -36,13 +68,13 @@ export async function GET(request: NextRequest) {
       
       if (!sessionData) continue
 
-      const sessionResult = {
+      const sessionResult: SessionResult = {
         sessionId: currentSessionId,
         matches: {
-          clients: [] as any[],
-          workers: [] as any[],
-          tasks: [] as any[],
-          metadata: [] as any[]
+          clients: [],
+          workers: [],
+          tasks: [],
+          metadata: []
         },
         totalMatches: 0,
         metadata: {
@@ -52,15 +84,15 @@ export async function GET(request: NextRequest) {
       }
 
       // Search in each data type
-      for (const dataType of ['clients', 'workers', 'tasks']) {
-        const data = (sessionData as any)[dataType]
+      for (const dataType of ['clients', 'workers', 'tasks'] as const) {
+        const data = sessionData[dataType]
         if (!data || !data.rows || !Array.isArray(data.rows)) continue
 
-        const matches: any[] = []
+        const matches: RowMatch[] = []
         
         // Search through rows
-        data.rows.forEach((row: any, rowIndex: number) => {
-          const rowMatches: any[] = []
+        data.rows.forEach((row: Record<string, unknown>, rowIndex: number) => {
+          const rowMatches: SearchMatch[] = []
           
           // Search through each field in the row
           Object.entries(row).forEach(([field, value]) => {
@@ -83,7 +115,7 @@ export async function GET(request: NextRequest) {
         })
 
         if (matches.length > 0) {
-          (sessionResult.matches as any)[dataType] = matches
+          sessionResult.matches[dataType] = matches
           sessionResult.totalMatches += matches.length
         }
       }
@@ -94,14 +126,25 @@ export async function GET(request: NextRequest) {
           sessionData.workers?.fileName?.toLowerCase().includes(queryLower) ||
           sessionData.tasks?.fileName?.toLowerCase().includes(queryLower)) {
         sessionResult.totalMatches += 1
+        
+        const metadataMatches: Array<{ field: string; value: string }> = []
+        
+        if (sessionData.sessionId?.toLowerCase().includes(queryLower)) {
+          metadataMatches.push({ field: 'sessionId', value: sessionData.sessionId })
+        }
+        if (sessionData.clients?.fileName?.toLowerCase().includes(queryLower)) {
+          metadataMatches.push({ field: 'clientsFile', value: sessionData.clients.fileName })
+        }
+        if (sessionData.workers?.fileName?.toLowerCase().includes(queryLower)) {
+          metadataMatches.push({ field: 'workersFile', value: sessionData.workers.fileName })
+        }
+        if (sessionData.tasks?.fileName?.toLowerCase().includes(queryLower)) {
+          metadataMatches.push({ field: 'tasksFile', value: sessionData.tasks.fileName })
+        }
+        
         sessionResult.matches.metadata = [{
           type: 'session_info',
-          matches: [
-            sessionData.sessionId?.toLowerCase().includes(queryLower) && { field: 'sessionId', value: sessionData.sessionId },
-            sessionData.clients?.fileName?.toLowerCase().includes(queryLower) && { field: 'clientsFile', value: sessionData.clients.fileName },
-            sessionData.workers?.fileName?.toLowerCase().includes(queryLower) && { field: 'workersFile', value: sessionData.workers.fileName },
-            sessionData.tasks?.fileName?.toLowerCase().includes(queryLower) && { field: 'tasksFile', value: sessionData.tasks.fileName }
-          ].filter(Boolean)
+          matches: metadataMatches
         }]
       }
 

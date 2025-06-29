@@ -3,6 +3,7 @@ import { GoogleAIService } from '@/lib/ai/google-ai-service'
 import kvStore from '@/lib/storage/kv-store'
 import type { ValidationError } from '@/lib/validators/types'
 import type { DataRow } from '@/lib/types'
+import type { SessionData } from '@/lib/storage'
 
 interface SuggestFixRequest {
   sessionId: string
@@ -20,6 +21,17 @@ interface FixSuggestion {
   explanation: string
   isAutomatable: boolean
   alternativeValues?: (string | number | boolean | null)[]
+}
+
+interface ContextInfo {
+  dataType: string
+  column: string
+  currentValue: unknown
+  errorCategory: string
+  errorMessage: string
+  severity: string
+  rowData: Record<string, unknown>
+  [key: string]: unknown
 }
 
 export async function POST(req: NextRequest) {
@@ -60,7 +72,7 @@ export async function POST(req: NextRequest) {
 async function generateFixSuggestion(
   aiService: GoogleAIService,
   error: ValidationError,
-  sessionData: any,
+  sessionData: SessionData,
   context?: SuggestFixRequest['context']
 ): Promise<FixSuggestion> {
   // Fix: Access data directly from sessionData structure
@@ -69,27 +81,27 @@ async function generateFixSuggestion(
     workers: sessionData.workers?.rows || [],
     tasks: sessionData.tasks?.rows || []
   }
-  const errorRow = data[error.dataType]?.[error.row]
+  const errorRow = data[error.dataType as keyof typeof data]?.[error.row] as Record<string, unknown>
   
   // Build context for AI
-  const contextInfo = {
+  const contextInfo: ContextInfo = {
     dataType: error.dataType,
     column: error.column,
     currentValue: errorRow?.[error.column],
     errorCategory: error.category,
     errorMessage: error.message,
     severity: error.severity,
-    rowData: errorRow,
+    rowData: errorRow || {},
     ...context
   }
 
   // Get sample data for context (first 5 rows of the same type)
-  const sampleData = data[error.dataType]?.slice(0, 5) || []
+  const sampleData = data[error.dataType as keyof typeof data]?.slice(0, 5) || []
   
   // Get unique values for the column to help with suggestions
-  const columnValues = data[error.dataType]
-    ?.map((row: any) => row[error.column])
-    .filter((val: any) => val != null && val !== '')
+  const columnValues = data[error.dataType as keyof typeof data]
+    ?.map((row: Record<string, unknown>) => row[error.column])
+    .filter((val: unknown) => val != null && val !== '')
     .slice(0, 20) || []
 
   const uniqueValues = [...new Set(columnValues)]
@@ -108,10 +120,10 @@ async function generateFixSuggestion(
 }
 
 function buildFixSuggestionPrompt(
-  contextInfo: any,
-  sampleData: any[],
-  uniqueValues: any[],
-  allData: any
+  contextInfo: ContextInfo,
+  sampleData: Record<string, unknown>[],
+  uniqueValues: unknown[],
+  allData: Record<string, Record<string, unknown>[]>
 ): string {
   return `You are a data quality expert. Analyze this validation error and suggest the best fix:
 
@@ -193,8 +205,8 @@ function parseFixSuggestion(aiResponse: string): FixSuggestion {
 
 function generateRuleBasedSuggestion(
   error: ValidationError,
-  contextInfo: any,
-  uniqueValues: any[]
+  contextInfo: ContextInfo,
+  uniqueValues: unknown[]
 ): FixSuggestion {
   const { category, column } = error
   const currentValue = contextInfo.currentValue
@@ -227,11 +239,11 @@ function generateRuleBasedSuggestion(
     case 'reference':
       const validRefs = uniqueValues.filter(val => val && val.toString().trim())
       return {
-        suggestedValue: validRefs[0] || 'REF001',
+        suggestedValue: (validRefs[0] as string) || 'REF001',
         confidence: 'medium',
         explanation: 'Suggested valid reference from existing data',
         isAutomatable: false,
-        alternativeValues: validRefs.slice(0, 3)
+        alternativeValues: validRefs.slice(0, 3) as (string | number | boolean | null)[]
       }
       
     case 'datatype':
@@ -245,7 +257,7 @@ function generateRuleBasedSuggestion(
       
     default:
       return {
-        suggestedValue: currentValue,
+        suggestedValue: currentValue as string | number | boolean | null,
         confidence: 'low',
         explanation: 'Manual review recommended',
         isAutomatable: false,
@@ -254,7 +266,7 @@ function generateRuleBasedSuggestion(
   }
 }
 
-function getDefaultValue(column: string): any {
+function getDefaultValue(column: string): string | number {
   const lowerColumn = column.toLowerCase()
   
   if (lowerColumn.includes('id')) return 'AUTO_ID'
@@ -269,7 +281,7 @@ function getDefaultValue(column: string): any {
   return 'TBD'
 }
 
-function convertDataType(value: any, column: string): any {
+function convertDataType(value: unknown, column: string): string | number | null {
   if (value == null) return null
   
   const lowerColumn = column.toLowerCase()

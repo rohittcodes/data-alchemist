@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SessionManager } from '@/lib/storage'
-import { applyAutoFixes, getFixRecommendations, type AutoFixSummary } from '@/lib/validators/auto-fix'
+import { applyAutoFixes, type AutoFixSummary } from '@/lib/validators/auto-fix'
 import type { ValidationError } from '@/lib/validators/types'
 import type { ParsedData } from '@/lib/types'
 

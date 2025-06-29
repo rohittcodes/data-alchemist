@@ -2,22 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Papa from 'papaparse'
 import JSZip from 'jszip'
 import kvStore from '@/lib/storage/kv-store'
-
-// Rule type definition
-interface Rule {
-  id: string
-  type: 'coRun' | 'loadLimit' | 'phaseWindow'
-  description: string
-  status: 'active' | 'inactive' | 'error'
-  created: number
-  // Rule-specific data
-  tasks?: string[]
-  workers?: string[]
-  maxLoad?: number
-  startDate?: string
-  endDate?: string
-  phase?: string
-}
+import type { SessionData } from '@/lib/storage'
+import type { ParsedData } from '@/lib/types'
 
 export async function GET(req: NextRequest) {
   try {
@@ -152,7 +138,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handleSingleFileExport(sessionData: any, dataType: string) {
+async function handleSingleFileExport(sessionData: SessionData, dataType: string) {
   try {
     let content: string
     let contentType: string
@@ -177,7 +163,6 @@ async function handleSingleFileExport(sessionData: any, dataType: string) {
             tasks: sessionData.tasks?.rows?.length || 0,
             rules: sessionData.rules?.length || 0
           },
-          validationSummary: sessionData.validationSummary || null
         },
         data: {
           clients: sessionData.clients || null,
@@ -186,8 +171,8 @@ async function handleSingleFileExport(sessionData: any, dataType: string) {
         },
         rules: sessionData.rules || [],
         metadata: {
-          createdAt: sessionData.createdAt,
-          updatedAt: sessionData.updatedAt,
+          created: sessionData.created,
+          lastModified: sessionData.lastModified,
           version: '1.4.0'
         }
       }
@@ -212,7 +197,25 @@ async function handleSingleFileExport(sessionData: any, dataType: string) {
       filename = 'rules.json'
     } else {
       // Export specific data type as CSV
-      const data = sessionData[dataType]
+      let data: ParsedData | undefined
+      
+      switch (dataType) {
+        case 'clients':
+          data = sessionData.clients
+          break
+        case 'workers':
+          data = sessionData.workers
+          break
+        case 'tasks':
+          data = sessionData.tasks
+          break
+        default:
+          return NextResponse.json(
+            { error: `Unsupported data type: ${dataType}` },
+            { status: 400 }
+          )
+      }
+      
       if (!data || !data.rows) {
         return NextResponse.json(
           { error: `No ${dataType} data found` },
@@ -240,7 +243,7 @@ async function handleSingleFileExport(sessionData: any, dataType: string) {
   }
 }
 
-async function handleZipExport(sessionData: any, sessionId: string) {
+async function handleZipExport(sessionData: SessionData, sessionId: string) {
   try {
     console.log('Starting ZIP export for session:', sessionId)
     console.log('Session data structure:', {
@@ -268,8 +271,7 @@ async function handleZipExport(sessionData: any, sessionId: string) {
         workers: sessionData.workers?.rowCount || sessionData.workers?.rows?.length || 0,
         tasks: sessionData.tasks?.rowCount || sessionData.tasks?.rows?.length || 0,
         rules: sessionData.rules?.length || 0
-      },
-      validationSummary: sessionData.validationSummary || null
+      }
     }
     
     console.log('Export info prepared:', exportInfo)
@@ -280,7 +282,22 @@ async function handleZipExport(sessionData: any, sessionId: string) {
     let filesAdded = 0
     
     for (const dataType of dataTypes) {
-      const data = sessionData[dataType]
+      let data: ParsedData | undefined
+      
+      switch (dataType) {
+        case 'clients':
+          data = sessionData.clients
+          break
+        case 'workers':
+          data = sessionData.workers
+          break
+        case 'tasks':
+          data = sessionData.tasks
+          break
+        default:
+          continue
+      }
+      
       console.log(`Processing ${dataType} data:`, {
         exists: !!data,
         type: typeof data,
@@ -336,20 +353,26 @@ async function handleZipExport(sessionData: any, sessionId: string) {
             exportDate: new Date().toISOString(),
             totalRules: rules.length
           },
-          rules: rules.map((rule: any) => ({
-            id: rule.id,
-            type: rule.type,
-            description: rule.description,
-            status: rule.status,
-            created: rule.created,
+          rules: rules.map((rule: unknown) => {
+            const r = rule as Record<string, unknown>
+            const result: Record<string, unknown> = {
+              id: r.id,
+              type: r.type,
+              description: r.description,
+              status: r.status,
+              created: r.created
+            }
+            
             // Include rule-specific data safely
-            ...(rule.tasks && { tasks: rule.tasks }),
-            ...(rule.workers && { workers: rule.workers }),
-            ...(rule.maxLoad && { maxLoad: rule.maxLoad }),
-            ...(rule.startDate && { startDate: rule.startDate }),
-            ...(rule.endDate && { endDate: rule.endDate }),
-            ...(rule.phase && { phase: rule.phase })
-          }))
+            if (r.tasks) result.tasks = r.tasks
+            if (r.workers) result.workers = r.workers
+            if (r.maxLoad) result.maxLoad = r.maxLoad
+            if (r.startDate) result.startDate = r.startDate
+            if (r.endDate) result.endDate = r.endDate
+            if (r.phase) result.phase = r.phase
+            
+            return result
+          })
         }
         zip.file('rules.json', JSON.stringify(rulesContent, null, 2))
         console.log(`Added rules.json with ${rules.length} rules`)

@@ -1,10 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ValidationPanel, DataTable, FixRecommendations } from "@/components/data"
 import { 
@@ -12,8 +11,6 @@ import {
   Database, 
   Settings, 
   AlertTriangle, 
-  CheckCircle,
-  Zap,
   FileText,
   Users,
   Briefcase,
@@ -25,24 +22,34 @@ import { AppLayout } from "@/components/layout/AppLayout"
 import { ValidationSummary } from "@/lib/validators/types"
 import { canAutoFix } from "@/lib/validators/auto-fix"
 
+interface SessionData {
+  clients?: { rows?: unknown[]; data?: unknown[] } | unknown[]
+  workers?: { rows?: unknown[]; data?: unknown[] } | unknown[]
+  tasks?: { rows?: unknown[]; data?: unknown[] } | unknown[]
+  [key: string]: unknown
+}
+
 export default function SessionAnalysisPage() {
   const params = useParams()
   const router = useRouter()
   const sessionId = params.sessionId as string
   
-  const [sessionData, setSessionData] = React.useState<any>(null)
+  const [sessionData, setSessionData] = React.useState<SessionData | null>(null)
   const [validation, setValidation] = React.useState<ValidationSummary | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [validating, setValidating] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  React.useEffect(() => {
-    if (sessionId) {
-      loadSessionData()
+  const getDataArray = (data: unknown): unknown[] => {
+    if (Array.isArray(data)) return data
+    if (data && typeof data === 'object') {
+      const obj = data as { rows?: unknown[]; data?: unknown[] }
+      return obj.rows || obj.data || []
     }
-  }, [sessionId])
+    return []
+  }
 
-  const loadSessionData = async () => {
+  const loadSessionData = React.useCallback(async () => {
     try {
       setLoading(true)
       
@@ -63,9 +70,15 @@ export default function SessionAnalysisPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [sessionId])
 
-  const runValidation = async (session: any) => {
+  React.useEffect(() => {
+    if (sessionId) {
+      loadSessionData()
+    }
+  }, [sessionId, loadSessionData])
+
+  const runValidation = async (session: SessionData) => {
     try {
       setValidating(true)
       
@@ -75,9 +88,9 @@ export default function SessionAnalysisPage() {
         body: JSON.stringify({
           sessionId,
           data: {
-            clients: session.clients?.rows || [],
-            workers: session.workers?.rows || [],
-            tasks: session.tasks?.rows || []
+            clients: getDataArray(session.clients),
+            workers: getDataArray(session.workers),
+            tasks: getDataArray(session.tasks)
           }
         })
       })
@@ -170,8 +183,8 @@ export default function SessionAnalysisPage() {
 
   const availableDataTypes = dataTypes.filter(type => {
     const data = sessionData?.[type.key]
-    const dataArray = data?.rows || data?.data || data
-    return Array.isArray(dataArray) && dataArray.length > 0
+    const dataArray = getDataArray(data)
+    return dataArray.length > 0
   })
 
   const healthScore = getHealthScore()
@@ -244,7 +257,7 @@ export default function SessionAnalysisPage() {
                   <div className="text-sm text-gray-400">Health Score</div>
                   {!validation && (
                     <div className="text-xs text-yellow-400 mt-1">
-                      Click "Re-analyze" to generate score
+                      Click &quot;Re-analyze&quot; to generate score
                     </div>
                   )}
                   {validation && (
@@ -259,8 +272,8 @@ export default function SessionAnalysisPage() {
 
           {availableDataTypes.map((type) => {
             const data = sessionData?.[type.key]
-            const dataArray = data?.rows || data?.data || data
-            const count = Array.isArray(dataArray) ? dataArray.length : 0
+            const dataArray = getDataArray(data)
+            const count = dataArray.length
 
             return (
               <Card key={type.key} className="bg-white/5 backdrop-blur-xl border border-white/10">
@@ -337,8 +350,8 @@ export default function SessionAnalysisPage() {
                 {dataTypes.map((type) => {
                   const isAvailable = availableDataTypes.some(t => t.key === type.key)
                   const data = sessionData?.[type.key]
-                  const dataArray = data?.rows || data?.data || data
-                  const count = Array.isArray(dataArray) ? dataArray.length : 0
+                  const dataArray = getDataArray(data)
+                  const count = dataArray.length
 
                   return (
                     <TabsTrigger 
@@ -361,13 +374,13 @@ export default function SessionAnalysisPage() {
 
               {availableDataTypes.map((type) => {
                 const data = sessionData?.[type.key]
-                const dataArray = data?.rows || data?.data || data
+                const dataArray = getDataArray(data)
 
                 return (
                   <TabsContent key={type.key} value={type.key} className="mt-6">
-                    {Array.isArray(dataArray) && dataArray.length > 0 ? (
+                    {dataArray.length > 0 ? (
                       <DataTable 
-                        data={dataArray.slice(0, 10)} // Show only first 10 rows for preview
+                        data={dataArray.slice(0, 10) as Record<string, unknown>[]} // Show only first 10 rows for preview
                         onCellEdit={async () => {}} // Read-only in analysis view
                         readOnly={true}
                         className="bg-transparent"

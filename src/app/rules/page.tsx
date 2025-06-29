@@ -4,14 +4,25 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { useSessions } from '@/hooks/useSessions'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { RuleBuilder, SessionSelector } from '@/components/data'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Loader2, Settings, CheckCircle, AlertTriangle, Database } from 'lucide-react'
 import type { SessionData } from '@/lib'
+
+interface SessionInfo {
+  sessionId: string
+  status: string
+  created: number
+  lastModified: number
+  files: {
+    clients?: { fileName: string; rowCount: number }
+    workers?: { fileName: string; rowCount: number }
+    tasks?: { fileName: string; rowCount: number }
+  }
+}
 
 function RulesPageContent() {
   const searchParams = useSearchParams()
@@ -20,26 +31,57 @@ function RulesPageContent() {
   const router = useRouter()
   
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
-  const [sessions, setSessions] = useState<any[]>([])
+  const [sessions, setSessions] = useState<SessionInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [availableTasks, setAvailableTasks] = useState<{ id: string; title: string }[]>([])
   const [availableWorkers, setAvailableWorkers] = useState<{ id: string; name: string }[]>([])
 
-  useEffect(() => {
-    if (isLoaded && !user) {
-      router.push('/sign-in')
-      return
+  const fetchSessionData = React.useCallback(async () => {
+    if (!sessionId) return
+    
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch(`/api/session/${sessionId}?includeData=true`)
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Session ${sessionId} not found. Please upload files again.`)
+        }
+        throw new Error('Failed to fetch session data')
+      }
+      
+      const data = await response.json()
+      setSessionData(data)
+      
+      // Extract tasks and workers for rule building
+      if (data.tasks?.rows) {
+        setAvailableTasks(
+          data.tasks.rows.map((task: Record<string, unknown>, index: number) => ({
+            id: (task.id as string) || `task_${index}`,
+            title: (task.title as string) || (task.name as string) || `Task ${index + 1}`
+          }))
+        )
+      }
+      
+      if (data.workers?.rows) {
+        setAvailableWorkers(
+          data.workers.rows.map((worker: Record<string, unknown>, index: number) => ({
+            id: (worker.id as string) || `worker_${index}`,
+            name: (worker.name as string) || (worker.fullName as string) || `Worker ${index + 1}`
+          }))
+        )
+      }
+    } catch (err) {
+      console.error('Error fetching session data:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load session data')
+    } finally {
+      setLoading(false)
     }
+  }, [sessionId])
 
-    if (sessionId) {
-      fetchSessionData()
-    } else {
-      fetchSessions()
-    }
-  }, [sessionId, isLoaded, user, router])
-
-  const fetchSessions = async () => {
+  const fetchSessions = React.useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/sessions')
@@ -54,50 +96,20 @@ function RulesPageContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchSessionData = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch(`/api/session/${sessionId}?includeData=true`)
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(`Session ${sessionId} not found. Please upload files again.`)
-        }
-        throw new Error('Failed to fetch session data')
-      }
-      
-      const data = await response.json()
-      setSessionData(data)
-      
-      // Extract tasks and workers for rule building
-      if (data.tasks?.rows) {
-        setAvailableTasks(
-          data.tasks.rows.map((task: any, index: number) => ({
-            id: task.id || `task_${index}`,
-            title: task.title || task.name || `Task ${index + 1}`
-          }))
-        )
-      }
-      
-      if (data.workers?.rows) {
-        setAvailableWorkers(
-          data.workers.rows.map((worker: any, index: number) => ({
-            id: worker.id || `worker_${index}`,
-            name: worker.name || worker.fullName || `Worker ${index + 1}`
-          }))
-        )
-      }
-      
-      setError(null)
-    } catch (err) {
-      console.error('Error fetching session data:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch session data')
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push('/sign-in')
+      return
     }
-  }
+
+    if (sessionId) {
+      fetchSessionData()
+    } else {
+      fetchSessions()
+    }
+  }, [sessionId, isLoaded, user, router, fetchSessionData, fetchSessions])
 
   if (!isLoaded || loading) {
     return (

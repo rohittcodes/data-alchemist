@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SessionManager } from '@/lib/storage'
+import type { ParsedData, DataRow } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,16 +17,19 @@ export async function POST(request: NextRequest) {
     const sessionId = `preview_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     
     // Create the session first
-    const sessionData = await SessionManager.createSession(sessionId)
+    await SessionManager.createSession(sessionId)
     
     // Update with the data - convert it to the expected format
-    const updates: any = {}
+    const updates: Record<string, ParsedData> = {}
     for (const [key, value] of Object.entries(data)) {
       if (key === 'clients' || key === 'workers' || key === 'tasks') {
+        const valueArray = value as DataRow[]
         updates[key] = {
-          data: value,
-          headers: value && Array.isArray(value) && value.length > 0 ? Object.keys(value[0]) : [],
-          rowCount: Array.isArray(value) ? value.length : 0
+          rows: valueArray,
+          headers: valueArray && Array.isArray(valueArray) && valueArray.length > 0 ? Object.keys(valueArray[0]) : [],
+          rowCount: Array.isArray(valueArray) ? valueArray.length : 0,
+          fileName: `${key}.csv`,
+          fileSize: 0
         }
       }
     }

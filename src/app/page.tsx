@@ -3,10 +3,8 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
-import { FileUpload } from "@/components/data"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Briefcase, CheckSquare, ArrowRight, Database, TrendingUp, Activity, BarChart3, Zap } from "lucide-react"
+import { TrendingUp, Activity, BarChart3, Zap } from "lucide-react"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { motion } from "motion/react"
 import Image from "next/image"
@@ -15,11 +13,15 @@ import { SignInButton } from "@clerk/nextjs"
 export default function Home() {
   const router = useRouter()
   const { user, isLoaded } = useUser()
-  const [uploadedFiles, setUploadedFiles] = React.useState<{
+  const uploadedFiles = {
+    clients: undefined,
+    workers: undefined, 
+    tasks: undefined
+  } as {
     clients?: File
     workers?: File
     tasks?: File
-  }>({})
+  }
 
   // Redirect authenticated users to the main dashboard
   React.useEffect(() => {
@@ -27,13 +29,6 @@ export default function Home() {
       router.push('/data')
     }
   }, [isLoaded, user, router])
-
-  const handleFileSelect = (fileType: 'clients' | 'workers' | 'tasks') => (file: File | null) => {
-    setUploadedFiles(prev => ({
-      ...prev,
-      [fileType]: file || undefined
-    }))
-  }
 
   const canProceed = Object.values(uploadedFiles).filter(Boolean).length > 0
 
