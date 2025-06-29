@@ -12,7 +12,7 @@ import {
   AlertTriangle 
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ValidationError } from '@/lib'
+import { ValidationError } from '@/lib/validators/types'
 
 interface ValidationErrorItemProps {
   error: ValidationError
@@ -31,14 +31,14 @@ export const ValidationErrorItem: React.FC<ValidationErrorItemProps> = ({
   const [fixStatus, setFixStatus] = useState<'none' | 'success' | 'error'>('none')
   
   const severityColors: Record<string, string> = {
-    high: 'border-red-200 bg-red-50',
-    medium: 'border-orange-200 bg-orange-50',
-    low: 'border-yellow-200 bg-yellow-50'
+    high: 'border-red-500/50 bg-red-500/10',
+    medium: 'border-orange-500/50 bg-orange-500/10',
+    low: 'border-yellow-500/50 bg-yellow-500/10'
   }
   
   const typeIcons = {
-    error: <XCircle className="h-4 w-4 text-red-600" />,
-    warning: <AlertTriangle className="h-4 w-4 text-orange-600" />
+    error: <XCircle className="h-4 w-4 text-red-400" />,
+    warning: <AlertTriangle className="h-4 w-4 text-orange-400" />
   }
 
   const applyAutoFix = async () => {
@@ -86,10 +86,10 @@ export const ValidationErrorItem: React.FC<ValidationErrorItemProps> = ({
   return (
     <div 
       className={cn(
-        "p-3 border rounded-md transition-shadow",
+        "p-3 border rounded-md transition-shadow bg-white/5 backdrop-blur-sm",
         severityColors[error.severity],
-        fixStatus === 'success' && "border-green-400 bg-green-50",
-        fixStatus === 'error' && "border-red-400"
+        fixStatus === 'success' && "border-green-400/50 bg-green-500/10",
+        fixStatus === 'error' && "border-red-400/50"
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -99,14 +99,14 @@ export const ValidationErrorItem: React.FC<ValidationErrorItemProps> = ({
         >
           {typeIcons[error.type]}
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium truncate">
+            <div className="text-sm font-medium truncate text-white">
               {error.message}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-gray-400 mt-1">
               Row {error.row + 1}, Column: {error.column}
             </div>
             {error.suggestion && (
-              <div className="text-xs text-blue-600 mt-1 italic">
+              <div className="text-xs text-blue-400 mt-1 italic">
                 💡 {error.suggestion}
               </div>
             )}
@@ -128,13 +128,13 @@ export const ValidationErrorItem: React.FC<ValidationErrorItemProps> = ({
           {/* AI Fix Button */}
           <div className="flex items-center gap-1 mt-1">
             {fixStatus === 'success' && (
-              <Badge variant="default" className="text-xs bg-green-600">
+              <Badge variant="default" className="text-xs bg-green-600/20 border-green-500/50 text-green-300">
                 <Check className="h-3 w-3 mr-1" />
                 Fixed
               </Badge>
             )}
             {fixStatus === 'error' && (
-              <Badge variant="destructive" className="text-xs">
+              <Badge variant="destructive" className="text-xs bg-red-600/20 border-red-500/50 text-red-300">
                 <X className="h-3 w-3 mr-1" />
                 Failed
               </Badge>
@@ -142,7 +142,7 @@ export const ValidationErrorItem: React.FC<ValidationErrorItemProps> = ({
             {fixStatus === 'none' && (
               <Button
                 size="sm"
-                className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700"
+                className="h-6 px-2 text-xs bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/50 text-blue-300"
                 onClick={applyAutoFix}
                 disabled={isApplyingFix}
                 title="Auto-fix this error"

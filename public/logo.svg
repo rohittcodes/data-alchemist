@@ -1,0 +1,24 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Flask/Beaker Shape -->
+  <path d="M10 4H22V8L18 16V24C18 26.2091 16.2091 28 14 28H12C9.79086 28 8 26.2091 8 24V16L10 8V4Z" fill="url(#gradient1)" stroke="currentColor" stroke-width="1.5"/>
+  
+  <!-- Flask Neck -->
+  <rect x="12" y="2" width="8" height="4" rx="1" fill="currentColor"/>
+  
+  <!-- Data Points/Bubbles -->
+  <circle cx="12" cy="18" r="1.5" fill="rgba(255,255,255,0.8)"/>
+  <circle cx="16" cy="20" r="2" fill="rgba(255,255,255,0.6)"/>
+  <circle cx="14" cy="22" r="1" fill="rgba(255,255,255,0.9)"/>
+  
+  <!-- Sparkle/Magic Effect -->
+  <path d="M20 10L21 8L22 10L24 9L22 10L21 12L20 10L18 11L20 10Z" fill="rgba(255,255,255,0.8)"/>
+  <path d="M24 6L24.5 5L25 6L26 5.5L25 6L24.5 7L24 6L23 6.5L24 6Z" fill="rgba(255,255,255,0.6)"/>
+  
+  <defs>
+    <linearGradient id="gradient1" x1="8" y1="4" x2="18" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="rgba(59, 130, 246, 0.8)"/>
+      <stop offset="50%" stop-color="rgba(139, 92, 246, 0.8)"/>
+      <stop offset="100%" stop-color="rgba(236, 72, 153, 0.8)"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleAIService } from '@/lib/ai/google-ai-service'
 import kvStore from '@/lib/storage/kv-store'
-import type { ValidationError, DataRow } from '@/lib'
+import type { ValidationError } from '@/lib/validators/types'
+import type { DataRow } from '@/lib/types'
 
 interface SuggestFixRequest {
   sessionId: string

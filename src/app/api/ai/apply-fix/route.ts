@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import kvStore from '@/lib/storage/kv-store'
-import type { ValidationError, DataRow } from '@/lib'
+import type { ValidationError } from '@/lib/validators/types'
+import type { DataRow } from '@/lib/types'
 
 interface ApplyFixRequest {
   sessionId: string

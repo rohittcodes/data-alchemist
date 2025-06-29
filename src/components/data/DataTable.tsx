@@ -89,8 +89,8 @@ const EditableCell = ({
             if (e.key === 'Escape') onCancel()
           }}
           className={cn(
-            "h-8 text-sm",
-            hasError && "border-red-500 focus:border-red-500"
+            "h-8 text-sm bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400 focus:bg-white/15",
+            hasError && "border-red-400 focus:border-red-400"
           )}
           autoFocus
         />
@@ -99,21 +99,21 @@ const EditableCell = ({
           variant="ghost"
           onClick={onSave}
           disabled={isSaving}
-          className="h-8 w-8 p-0"
+          className="h-8 w-8 p-0 hover:bg-white/10"
         >
           {isSaving ? (
             <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
           ) : (
-            <Check className="h-3 w-3 text-green-600" />
+            <Check className="h-3 w-3 text-green-400" />
           )}
         </Button>
         <Button
           size="sm"
           variant="ghost"
           onClick={onCancel}
-          className="h-8 w-8 p-0"
+          className="h-8 w-8 p-0 hover:bg-white/10"
         >
-          <X className="h-3 w-3 text-red-600" />
+          <X className="h-3 w-3 text-red-400" />
         </Button>
       </div>
     )
@@ -129,14 +129,14 @@ const EditableCell = ({
       title={hasError ? errorMessage : 'Click to edit'}
     >
       <span className={cn(
-        "truncate",
-        hasError && "text-red-700"
+        "truncate text-gray-300",
+        hasError && "text-red-400"
       )}>
         {value || '-'}
       </span>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        {hasError && <AlertTriangle className="h-3 w-3 text-red-500" />}
-        <Edit3 className="h-3 w-3 text-muted-foreground" />
+        {hasError && <AlertTriangle className="h-3 w-3 text-red-400" />}
+        <Edit3 className="h-3 w-3 text-gray-500" />
       </div>
     </div>
   )
@@ -164,7 +164,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       ),
       cell: readOnly 
         ? ({ getValue }) => (
-            <div className="px-2 py-1">
+            <div className="px-2 py-1 text-gray-300">
               {getValue() as string || '-'}
             </div>
           )
@@ -197,19 +197,19 @@ export const DataTable: React.FC<DataTableProps> = ({
     <div className={cn("w-full", className)}>
       {/* Error Summary */}
       {validationErrors.length > 0 && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <div className="flex items-center gap-2 text-red-700 font-medium mb-2">
+        <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded-md backdrop-blur-sm">
+          <div className="flex items-center gap-2 text-red-400 font-medium mb-2">
             <AlertTriangle className="h-4 w-4" />
             {validationErrors.length} validation error{validationErrors.length > 1 ? 's' : ''} found
           </div>
-          <div className="text-sm text-red-600 space-y-1">
+          <div className="text-sm text-red-300 space-y-1">
             {validationErrors.slice(0, 3).map((error, index) => (
               <div key={index}>
                 Row {error.row + 1}, {error.column}: {error.message}
               </div>
             ))}
             {validationErrors.length > 3 && (
-              <div className="text-red-500">
+              <div className="text-red-400">
                 +{validationErrors.length - 3} more errors...
               </div>
             )}
@@ -218,16 +218,16 @@ export const DataTable: React.FC<DataTableProps> = ({
       )}
 
       {/* Data Table */}
-      <div className="border rounded-md overflow-hidden">
+      <div className="border border-white/10 rounded-md overflow-hidden bg-white/5 backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted/50">
+            <thead className="bg-white/10 backdrop-blur-sm">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="text-left p-3 font-medium border-b"
+                      className="text-left p-3 font-medium border-b border-white/10 text-white"
                       style={{ width: header.getSize() }}
                     >
                       {header.isPlaceholder
@@ -246,14 +246,14 @@ export const DataTable: React.FC<DataTableProps> = ({
                 <tr 
                   key={row.id}
                   className={cn(
-                    "border-b hover:bg-muted/25 transition-colors",
-                    index % 2 === 0 ? "bg-background" : "bg-muted/10"
+                    "border-b border-white/5 hover:bg-white/10 transition-colors",
+                    index % 2 === 0 ? "bg-transparent" : "bg-white/5"
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td 
                       key={cell.id} 
-                      className="p-1 border-r last:border-r-0"
+                      className="p-1 border-r border-white/5 last:border-r-0 text-gray-300"
                       style={{ width: cell.column.getSize() }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -267,7 +267,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       </div>
 
       {/* Footer Info */}
-      <div className="mt-4 text-sm text-muted-foreground">
+      <div className="mt-4 text-sm text-gray-400">
         Showing {data.length} rows
         {!readOnly && (
           <span className="ml-4">

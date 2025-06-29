@@ -4,6 +4,7 @@ export { ValidationPanel } from './ValidationPanel'
 export { FileUpload } from './FileUpload'
 export { AISearch } from './AISearch'
 export { RuleBuilder } from './RuleBuilder'
+export { SessionSelector } from './SessionSelector'
 
 // Validation Panel sub-components
 export { AutoFixSection } from './AutoFixSection'
@@ -13,3 +14,4 @@ export { HealthScore } from './HealthScore'
 export { IssuesByCategory } from './IssuesByCategory'
 export { DetailedIssuesTabs } from './DetailedIssuesTabs'
 export { ValidationErrorItem } from './ValidationErrorItem'
+export { FixRecommendations } from './FixRecommendations'

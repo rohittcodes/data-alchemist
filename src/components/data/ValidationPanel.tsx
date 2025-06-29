@@ -13,7 +13,7 @@ import {
   Check,
   X
 } from 'lucide-react'
-import { ValidationSummary, ValidationError } from '@/lib'
+import { ValidationSummary, ValidationError } from '@/lib/validators/types'
 import { cn } from '@/lib/utils'
 import { canAutoFix } from '@/lib/validators/auto-fix'
 
@@ -153,13 +153,13 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
 
   if (totalIssues === 0) {
     return (
-      <Card className={cn("border-green-200 bg-green-50", className)}>
+      <Card className={cn("bg-white/5 backdrop-blur-xl border border-green-500/30", className)}>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <CardTitle className="text-green-800">Data Validation Passed</CardTitle>
+            <CheckCircle className="h-5 w-5 text-green-400" />
+            <CardTitle className="text-green-300">Data Validation Passed</CardTitle>
           </div>
-          <CardDescription className="text-green-700">
+          <CardDescription className="text-green-400/80">
             All data meets quality standards. No issues found.
           </CardDescription>
         </CardHeader>
@@ -168,16 +168,16 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
   }
   
   return (
-    <Card className={className}>
+    <Card className={cn("bg-white/5 backdrop-blur-xl border border-white/10", className)}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {totalErrors > 0 ? (
-              <XCircle className="h-5 w-5 text-red-600" />
+              <XCircle className="h-5 w-5 text-red-400" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-orange-600" />
+              <AlertCircle className="h-5 w-5 text-orange-400" />
             )}
-            <CardTitle>Data Validation Results</CardTitle>
+            <CardTitle className="text-white">Data Validation Results</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             {/* Batch Fix Button */}
@@ -187,7 +187,7 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
                 variant="outline"
                 onClick={batchFix}
                 disabled={isBatchFixing}
-                className="text-xs"
+                className="text-xs bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/50 text-blue-300"
               >
                 {isBatchFixing ? (
                   <>
@@ -204,29 +204,34 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
             )}
             
             {batchFixStatus === 'success' && (
-              <Badge variant="default" className="bg-green-600">
+              <Badge variant="default" className="bg-green-600/20 border-green-500/50 text-green-300">
                 <Check className="h-3 w-3 mr-1" />
                 Fixed
               </Badge>
             )}
             
             {batchFixStatus === 'error' && (
-              <Badge variant="destructive">
+              <Badge variant="destructive" className="bg-red-600/20 border-red-500/50 text-red-300">
                 <X className="h-3 w-3 mr-1" />
                 Error
               </Badge>
             )}
             
-            <span className="text-sm text-muted-foreground">Health Score:</span>
+            <span className="text-sm text-gray-400">Health Score:</span>
             <Badge 
               variant={healthScore >= 80 ? "default" : healthScore >= 60 ? "secondary" : "destructive"}
-              className="font-bold"
+              className={cn(
+                "font-bold",
+                healthScore >= 80 && "bg-green-600/20 border-green-500/50 text-green-300",
+                healthScore >= 60 && healthScore < 80 && "bg-yellow-600/20 border-yellow-500/50 text-yellow-300",
+                healthScore < 60 && "bg-red-600/20 border-red-500/50 text-red-300"
+              )}
             >
               {healthScore}%
             </Badge>
           </div>
         </div>
-        <CardDescription>
+        <CardDescription className="text-gray-400">
           Found {totalErrors} error{totalErrors !== 1 ? 's' : ''} and {totalWarnings} warning{totalWarnings !== 1 ? 's' : ''} across your data
         </CardDescription>
       </CardHeader>
@@ -247,7 +252,7 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
         
         {/* Fix Recommendations */}
         <div className="space-y-4">
-          <h4 className="font-medium">Fix Recommendations</h4>
+          <h4 className="font-medium text-white">Fix Recommendations</h4>
           
           {/* Auto-fixable Errors */}
           <AutoFixSection
@@ -280,17 +285,17 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({
         {totalErrors > 0 && (
           <div className="pt-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium">
+              <h4 className="font-medium text-white">
                 Batch Fix Errors ({totalErrors})
               </h4>
               {batchFixStatus === 'success' && (
-                <Badge variant="default" className="text-xs bg-green-600">
+                <Badge variant="default" className="text-xs bg-green-600/20 border-green-500/50 text-green-300">
                   <Check className="h-3 w-3 mr-1" />
                   Fixed
                 </Badge>
               )}
               {batchFixStatus === 'error' && (
-                <Badge variant="destructive" className="text-xs">
+                <Badge variant="destructive" className="text-xs bg-red-600/20 border-red-500/50 text-red-300">
                   <X className="h-3 w-3 mr-1" />
                   Failed
                 </Badge>

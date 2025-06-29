@@ -2,18 +2,31 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useUser } from "@clerk/nextjs"
 import { FileUpload } from "@/components/data"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Briefcase, CheckSquare, ArrowRight, Database } from "lucide-react"
+import { Users, Briefcase, CheckSquare, ArrowRight, Database, TrendingUp, Activity, BarChart3, Zap } from "lucide-react"
+import { AppLayout } from "@/components/layout/AppLayout"
+import { motion } from "motion/react"
+import Image from "next/image"
+import { SignInButton } from "@clerk/nextjs"
 
 export default function Home() {
   const router = useRouter()
+  const { user, isLoaded } = useUser()
   const [uploadedFiles, setUploadedFiles] = React.useState<{
     clients?: File
     workers?: File
     tasks?: File
   }>({})
+
+  // Redirect authenticated users to the main dashboard
+  React.useEffect(() => {
+    if (isLoaded && user) {
+      router.push('/data')
+    }
+  }, [isLoaded, user, router])
 
   const handleFileSelect = (fileType: 'clients' | 'workers' | 'tasks') => (file: File | null) => {
     setUploadedFiles(prev => ({
@@ -24,307 +37,278 @@ export default function Home() {
 
   const canProceed = Object.values(uploadedFiles).filter(Boolean).length > 0
 
-  const handleProceedToDashboard = async () => {
-    if (!canProceed) return
-
-    try {
-      // Create FormData with all uploaded files
-      const formData = new FormData()
-      
-      if (uploadedFiles.clients) {
-        formData.append('clients', uploadedFiles.clients)
-      }
-      if (uploadedFiles.workers) {
-        formData.append('workers', uploadedFiles.workers)
-      }
-      if (uploadedFiles.tasks) {
-        formData.append('tasks', uploadedFiles.tasks)
-      }
-
-      // Upload and parse files
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
-      }
-
-      const result = await response.json()
-      
-      // Store session ID and redirect to dashboard
-      sessionStorage.setItem('currentSessionId', result.sessionId)
-      
-      // Show any warnings if present
-      if (result.warnings && result.warnings.length > 0) {
-        console.warn('Upload warnings:', result.warnings)
-      }
-      
-      router.push(`/dashboard?session=${result.sessionId}`)
-    } catch (error) {
-      console.error('Upload failed:', error)
-      alert('Upload failed. Please try again.')
+  const handleGetStarted = () => {
+    if (user) {
+      router.push('/data')
+    } else {
+      // For anonymous users, show sign-in
+      router.push('/sign-in')
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Database className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-bold tracking-tight">
-              Data Alchemist
-            </h1>
-          </div>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-2">
-            Transform your workforce data with AI-powered validation and intelligent rule generation
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Upload your client, worker, and task data to get started
-          </p>
-        </div>
-
-        {/* 3 File Upload Zones */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8 max-w-6xl mx-auto">
-          {/* Clients Upload */}
-          <Card className="transition-all hover:shadow-lg border-2 hover:border-primary/20">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-              </div>
-              <CardTitle className="text-lg">Clients Data</CardTitle>
-              <CardDescription className="text-sm">
-                Upload your client information and requirements
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <FileUpload
-                title=""
-                description="Drop clients CSV/Excel here"
-                acceptedTypes=".csv,.xlsx,.xls"
-                maxSize={25}
-                onFileSelect={handleFileSelect('clients')}
-                className="w-full"
-              />
-              <div className="mt-3 text-xs text-muted-foreground">
-                Expected: ClientID, ClientName, Requirements, Priority
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Workers Upload */}
-          <Card className="transition-all hover:shadow-lg border-2 hover:border-primary/20">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Briefcase className="h-8 w-8 text-green-600 dark:text-green-400" />
-              </div>
-              <CardTitle className="text-lg">Workers Data</CardTitle>
-              <CardDescription className="text-sm">
-                Upload worker profiles and availability
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <FileUpload
-                title=""
-                description="Drop workers CSV/Excel here"
-                acceptedTypes=".csv,.xlsx,.xls"
-                maxSize={25}
-                onFileSelect={handleFileSelect('workers')}
-                className="w-full"
-              />
-              <div className="mt-3 text-xs text-muted-foreground">
-                Expected: WorkerID, Name, Skills, Availability, Rate
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tasks Upload */}
-          <Card className="transition-all hover:shadow-lg border-2 hover:border-primary/20">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <CheckSquare className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              </div>
-              <CardTitle className="text-lg">Tasks Data</CardTitle>
-              <CardDescription className="text-sm">
-                Upload task definitions and scheduling
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <FileUpload
-                title=""
-                description="Drop tasks CSV/Excel here"
-                acceptedTypes=".csv,.xlsx,.xls"
-                maxSize={25}
-                onFileSelect={handleFileSelect('tasks')}
-                className="w-full"
-              />
-              <div className="mt-3 text-xs text-muted-foreground">
-                Expected: TaskID, ClientID, Duration, Skills, Deadline
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Upload Status & Action */}
-        <Card className="max-w-2xl mx-auto mb-8">
-          <CardContent className="pt-6">
+    <AppLayout showSidebar={false}>
+      <div className="flex justify-end px-8 pt-4 gap-4">
+        <SignInButton />
+      </div>
+      <div className="MIN-H-FULL relative flex items-center justify-center p-8">
+        {/* Main Content Container */}
+        <div className="max-w-7xl w-full mx-auto grid lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Left Side - Hero Content */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="space-y-8"
+          >
+            {/* Hero Title */}
             <div className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+                className="flex items-center gap-3"
+              >
+                <div className="w-10 h-10 relative">
+                  <Image 
+                    src="/logo.svg" 
+                    alt="Data Alchemist" 
+                    width={40} 
+                    height={40}
+                    className="text-white"
+                  />
+                </div>
+                <span className="text-sm font-medium text-gray-400 tracking-wider uppercase">Data Alchemist</span>
+              </motion.div>
+              
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="text-5xl lg:text-6xl font-bold text-white leading-tight"
+              >
+                One-click for Asset
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                  Defense
+                </span>
+              </motion.h1>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+                className="text-lg text-gray-400 max-w-lg leading-relaxed"
+              >
+                Drag and drop all assets, where it manages to blockchain technology meets financial expertise through the smartest technology.
+              </motion.p>
+            </div>
+
+            {/* Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="flex items-center gap-4"
+            >
+              <Button 
+                onClick={handleGetStarted}
+                className="px-8 py-3 bg-white text-black hover:bg-gray-100 font-medium rounded-full transition-all duration-200"
+              >
+                Get Started
+              </Button>
+              <Button 
+                variant="outline"
+                className="px-8 py-3 border-white/20 text-white hover:bg-white/10 font-medium rounded-full transition-all duration-200"
+              >
+                Documentation
+              </Button>
+            </motion.div>
+
+            {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1, duration: 0.6 }}
+              className="flex items-center gap-8 pt-8"
+            >
               <div>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Database className="h-4 w-4" />
-                  Upload Status
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <div className={`w-full h-2 rounded-full mb-2 ${
-                      uploadedFiles.clients ? 'bg-blue-500' : 'bg-muted'
-                    }`} />
-                    <div className="text-xs font-medium">Clients</div>
-                    <div className={`text-xs ${
-                      uploadedFiles.clients ? 'text-blue-600' : 'text-muted-foreground'
-                    }`}>
-                      {uploadedFiles.clients ? '✓ Ready' : 'Pending'}
+                <div className="text-2xl font-bold text-white">98.2%</div>
+                <div className="text-sm text-gray-400">Success Rate</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-white">24/7</div>
+                <div className="text-sm text-gray-400">Monitoring</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-white">$2.7M</div>
+                <div className="text-sm text-gray-400">Assets Secured</div>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Right Side - Dashboard Preview */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="relative"
+          >
+            {/* Main Dashboard Card */}
+            <div className="relative">
+              {/* Background glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl blur-3xl" />
+              
+              {/* Main card */}
+              <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">Meet Marvellous Insights</h3>
+                    <p className="text-sm text-gray-400">Keep your team organised this cutting-edge insights for a user growth of all major fields</p>
+                  </div>
+                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                    <BarChart3 className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Success Transactions */}
+                  <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-gray-400">Success Transactions</span>
+                      <TrendingUp className="w-4 h-4 text-green-400" />
+                    </div>
+                    <div className="text-2xl font-bold text-white mb-1">98.2%</div>
+                    <div className="text-xs text-green-400">+12.5% from last month</div>
+                    
+                    {/* Mini chart */}
+                    <div className="mt-3 flex items-end gap-1 h-8">
+                      {[4, 6, 3, 8, 5, 9, 7, 10, 6, 8].map((height, i) => (
+                        <div 
+                          key={i}
+                          className="bg-green-400/60 rounded-sm flex-1"
+                          style={{ height: `${height * 3}px` }}
+                        />
+                      ))}
                     </div>
                   </div>
-                  <div className="text-center">
-                    <div className={`w-full h-2 rounded-full mb-2 ${
-                      uploadedFiles.workers ? 'bg-green-500' : 'bg-muted'
-                    }`} />
-                    <div className="text-xs font-medium">Workers</div>
-                    <div className={`text-xs ${
-                      uploadedFiles.workers ? 'text-green-600' : 'text-muted-foreground'
-                    }`}>
-                      {uploadedFiles.workers ? '✓ Ready' : 'Pending'}
+
+                  {/* Liquidity Labyrinth */}
+                  <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-gray-400">Liquidity Labyrinth</span>
+                      <Activity className="w-4 h-4 text-blue-400" />
                     </div>
-                  </div>
-                  <div className="text-center">
-                    <div className={`w-full h-2 rounded-full mb-2 ${
-                      uploadedFiles.tasks ? 'bg-purple-500' : 'bg-muted'
-                    }`} />
-                    <div className="text-xs font-medium">Tasks</div>
-                    <div className={`text-xs ${
-                      uploadedFiles.tasks ? 'text-purple-600' : 'text-muted-foreground'
-                    }`}>
-                      {uploadedFiles.tasks ? '✓ Ready' : 'Pending'}
+                    <div className="text-2xl font-bold text-white mb-1">$847K</div>
+                    <div className="text-xs text-blue-400">Available liquidity pool</div>
+                    
+                    {/* Mini chart */}
+                    <div className="mt-3 flex items-end gap-1 h-8">
+                      {[7, 4, 8, 5, 9, 6, 10, 7, 5, 8].map((height, i) => (
+                        <div 
+                          key={i}
+                          className="bg-blue-400/60 rounded-sm flex-1"
+                          style={{ height: `${height * 3}px` }}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
+
+                {/* Financial Opportunities */}
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-white">Your Palette Financial Opportunities</h4>
+                      <p className="text-xs text-gray-400">What is your appetite risk on a portfolio opportunity!</p>
+                    </div>
+                  </div>
+                  
+                  {/* Growth indicators */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-white">19.2</div>
+                      <div className="text-xs text-gray-400">Growth</div>
+                      <div className="text-xs text-green-400">$2.7m</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-white">24</div>
+                      <div className="text-xs text-gray-400">Growth</div>
+                      <div className="text-xs text-blue-400">$3.2m</div>
+                    </div>
+                  </div>
+
+                  {/* Chart visualization */}
+                  <div className="flex items-end justify-center gap-2 h-16">
+                    {[60, 80, 40, 90, 70, 85, 55].map((height, i) => (
+                      <div 
+                        key={i}
+                        className={`rounded-t-sm ${
+                          i === 1 ? 'bg-red-400' : 
+                          i === 3 ? 'bg-white' : 
+                          i === 5 ? 'bg-orange-400' : 
+                          'bg-gray-600'
+                        }`}
+                        style={{ height: `${height}%`, width: '12px' }}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
+            </div>
 
-              <div className="pt-4 border-t">
-                <Button 
-                  onClick={handleProceedToDashboard}
-                  disabled={!canProceed}
-                  className="w-full"
-                  size="lg"
-                >
-                  Process Data & Continue
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                {!canProceed && (
-                  <p className="text-sm text-muted-foreground text-center mt-2">
-                    Upload at least one file to continue
-                  </p>
-                )}
-                {canProceed && (
-                  <p className="text-sm text-green-600 text-center mt-2">
-                    {Object.values(uploadedFiles).filter(Boolean).length} file(s) ready for processing
-                  </p>
-                )}
+            {/* Floating elements */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.2, duration: 0.6 }}
+              className="absolute -top-4 -left-4 bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-sm text-white font-medium">Live Data</span>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </motion.div>
 
-        {/* Features */}
-        <div className="mt-16 grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          <div className="text-center p-6">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Easy Upload</h3>
-            <p className="text-muted-foreground">
-              Drag and drop or click to upload your data files with instant validation
-            </p>
-          </div>
-          
-          <div className="text-center p-6">
-            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-secondary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Smart Processing</h3>
-            <p className="text-muted-foreground">
-              Automated data analysis and transformation with real-time progress tracking
-            </p>
-          </div>
-          
-          <div className="text-center p-6">
-            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-accent-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Instant Results</h3>
-            <p className="text-muted-foreground">
-              Download processed results in multiple formats with detailed reports
-            </p>
-          </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.4, duration: 0.6 }}
+              className="absolute -bottom-4 -right-4 bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10"
+            >
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-yellow-400" />
+                <span className="text-sm text-white font-medium">AI Powered</span>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
 
-        {/* Features Preview */}
-        <div className="mt-12 grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          <div className="text-center p-6 rounded-lg bg-muted/30">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        {/* File Upload Section - Hidden initially, shown on scroll or interaction */}
+        <motion.div
+          initial={{ opacity: 0, y: 100 }}
+          animate={{ opacity: canProceed ? 1 : 0, y: canProceed ? 0 : 100 }}
+          transition={{ duration: 0.6 }}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-md"
+        >
+          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <h3 className="text-white font-medium mb-4">Upload Your Data</h3>
+            <div className="space-y-3">
+              {Object.entries(uploadedFiles).map(([key, file]) => (
+                <div key={key} className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400 capitalize">{key}</span>
+                  <span className={file ? "text-green-400" : "text-gray-500"}>
+                    {file ? "✓ Ready" : "Pending"}
+                  </span>
+                </div>
+              ))}
             </div>
-            <h3 className="text-lg font-semibold mb-2">AI Validation</h3>
-            <p className="text-muted-foreground text-sm">
-              Intelligent data validation with AI-powered error detection and correction suggestions
-            </p>
           </div>
-          
-          <div className="text-center p-6 rounded-lg bg-muted/30">
-            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-secondary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Smart Rules</h3>
-            <p className="text-muted-foreground text-sm">
-              Generate scheduling rules automatically based on your data patterns and constraints
-            </p>
-          </div>
-          
-          <div className="text-center p-6 rounded-lg bg-muted/30">
-            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-accent-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Clean Export</h3>
-            <p className="text-muted-foreground text-sm">
-              Export validated data and generated rules ready for your scheduling system
-            </p>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-12 text-sm text-muted-foreground">
-          <p>
-            Secure processing • Data validation • AI-powered insights
-          </p>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </AppLayout>
   );
 }

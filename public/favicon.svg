@@ -1,0 +1,23 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Flask/Beaker Shape -->
+  <path d="M5 2H11V4L9 8V12C9 13.1046 8.10457 14 7 14H6C4.89543 14 4 13.1046 4 12V8L5 4V2Z" fill="url(#gradient1)" stroke="white" stroke-width="0.75"/>
+  
+  <!-- Flask Neck -->
+  <rect x="6" y="1" width="4" height="2" rx="0.5" fill="white"/>
+  
+  <!-- Data Points/Bubbles -->
+  <circle cx="6" cy="9" r="0.75" fill="rgba(255,255,255,0.8)"/>
+  <circle cx="8" cy="10" r="1" fill="rgba(255,255,255,0.6)"/>
+  <circle cx="7" cy="11" r="0.5" fill="rgba(255,255,255,0.9)"/>
+  
+  <!-- Sparkle/Magic Effect -->
+  <path d="M10 5L10.5 4L11 5L12 4.5L11 5L10.5 6L10 5L9 5.5L10 5Z" fill="rgba(255,255,255,0.8)"/>
+  
+  <defs>
+    <linearGradient id="gradient1" x1="4" y1="2" x2="9" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="50%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+  </defs>
+</svg>

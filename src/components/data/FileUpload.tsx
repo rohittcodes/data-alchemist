@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { Upload, File, X, Check } from "lucide-react"
+import { Upload, File, X, Check, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface FileUploadProps {
@@ -12,6 +12,9 @@ interface FileUploadProps {
   className?: string
   title?: string
   description?: string
+  type?: 'clients' | 'workers' | 'tasks' // Used for view navigation
+  onView?: (file: File, type: string) => void
+  isViewLoading?: boolean
 }
 
 export function FileUpload({
@@ -20,7 +23,10 @@ export function FileUpload({
   maxSize = 10,
   className,
   title = "Upload File",
-  description = "Drag and drop your file here, or click to browse"
+  description = "Drag and drop your file here, or click to browse",
+  type,
+  onView,
+  isViewLoading = false
 }: FileUploadProps) {
   const [isDragOver, setIsDragOver] = React.useState(false)
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
@@ -130,6 +136,29 @@ export function FileUpload({
             </div>
             
             <div className="flex gap-2 justify-center">
+              {type && onView && (
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onView(selectedFile, type)
+                  }}
+                  variant="outline"
+                  size="sm"
+                  disabled={isViewLoading}
+                >
+                  {isViewLoading ? (
+                    <>
+                      <div className="w-4 h-4 mr-1 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </>
+                  )}
+                </Button>
+              )}
               <Button
                 onClick={(e) => {
                   e.stopPropagation()

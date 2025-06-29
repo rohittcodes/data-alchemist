@@ -3,7 +3,7 @@
 import React from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Users, UserCheck, Briefcase } from 'lucide-react'
-import { ValidationError } from '@/lib'
+import { ValidationError } from '@/lib/validators/types'
 import { ValidationErrorItem } from './ValidationErrorItem'
 
 interface DetailedIssuesTabsProps {
