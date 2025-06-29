@@ -105,15 +105,16 @@ export default function DataPage() {
             {/* Proceed Button */}
             {hasFiles && (
               <div className="flex justify-center pt-6">
-                <HoverBorderGradient>
+                <HoverBorderGradient as="div">
                   <Button
+                    variant="ghost"
                     onClick={handleProceedToAnalysis}
                     disabled={isUploading || isCreatingPreview}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 text-lg font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50"
+                    className="text-white px-8 py-3 text-lg font-medium hover:bg-transparent"
                   >
                     {isUploading ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 mr-2"></div>
                         Creating Session...
                       </>
                     ) : (
